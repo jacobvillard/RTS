@@ -1,64 +1,55 @@
 using UnityEngine;
 
 namespace _Scripts.Units {
-    
     /// <summary>
-    /// Manages the damage area of a unit.
+    /// Tracks opposing units inside a unit's damage trigger.
     /// </summary>
     public class UnitDamageArea : MonoBehaviour {
-        
-        /// <summary>
-        /// The unit this damage area belongs to.
-        /// </summary>
-        private Unit _unit;
 
-        // Start is called before the first frame update
+        #region Variables
+
+        private Unit _unit; // Unit that owns this damage area.
+
+        #endregion
+        #region Unity Methods
+
         private void Start() {
             _unit = GetComponentInParent<Unit>();
         }
         
-        
-        /// <summary>
-        /// Whenever a collider enters our trigger, check if it's an opposing unit and store it.
-        /// </summary>
         private void OnTriggerEnter2D(Collider2D other) {
-            // Attempt to get a Unit component on the collider
-            var otherUnit = other.GetComponent<Unit>();
-            
-            // If the other collider doesn't have a Unit component, it's not a unit; ignore it
-            if (otherUnit == null || otherUnit.team == _unit.team) return;
-            
-            
-            // Opposing team; add it to our target list
-            if (!_unit.targetUnits.Contains(otherUnit)) {
-                _unit.targetUnits.Add(otherUnit);
-            }
+            TryAddTarget(other);
         }
         
-        private void OnTriggerStay2D(Collider2D other)
-        {
-            // // Attempt to get a Unit component on the collider
-            var otherUnit = other.GetComponent<Unit>();
-            
-            // If the other collider doesn't have a Unit component, it's not a unit; ignore it
-            if (otherUnit == null || otherUnit.team == _unit.team) return;
-            
-            
-            // Opposing team; add it to our target list
-            if (!_unit.targetUnits.Contains(otherUnit)) {
-                _unit.targetUnits.Add(otherUnit);
-            }
+        private void OnTriggerStay2D(Collider2D other) {
+            TryAddTarget(other);
         }
-    
 
-        /// <summary>
-        /// Whenever a collider leaves our trigger, remove it from our list if it's there.
-        /// </summary>
         private void OnTriggerExit2D(Collider2D other) {
             var otherUnit = other.GetComponent<Unit>();
-            if (otherUnit != null && otherUnit.team != _unit.team) {
+            if (otherUnit != null && _unit != null && otherUnit.team != _unit.team) {
                 _unit.targetUnits.Remove(otherUnit);
             }
         }
+
+        #endregion
+        #region Targeting
+
+        /// <summary>
+        /// Adds an opposing unit to the owner target list when possible.
+        /// </summary>
+        /// <param name="other">The collider entering or staying in the trigger.</param>
+        private void TryAddTarget(Collider2D other) {
+            if (_unit == null) return;
+
+            var otherUnit = other.GetComponent<Unit>();
+            if (otherUnit == null || otherUnit.team == _unit.team) return;
+
+            if (!_unit.targetUnits.Contains(otherUnit)) {
+                _unit.targetUnits.Add(otherUnit);
+            }
+        }
+
+        #endregion
     }
 }

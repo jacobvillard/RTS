@@ -1,42 +1,47 @@
-using System;
 using _Scripts.GameManagement;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace _Scripts.Camera {
-    public class PlayerInput : MonoBehaviour
-    {
-        
+    /// <summary>
+    /// Converts player clicks into NavMesh movement commands for selected units.
+    /// </summary>
+    public class PlayerInput : MonoBehaviour {
 
+        #region Variables
 
+        private const float MaxRayDistance = 1000f; // Maximum click raycast distance.
+        private const float NavMeshSampleRadius = 1f; // Radius used to find nearby NavMesh positions.
 
-        void Update()
-        {
-            // Left-click check
-            if (Input.GetMouseButtonDown(0))
-            {
-                // Create a ray from the Camera through the mouse position
-                var ray = UnityEngine.Camera.main!.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hitInfo;
+        #endregion
+        #region Unity Methods
 
-                // Perform a raycast against the ground/walkable layer
-                if (Physics.Raycast(ray, out hitInfo, 1000f))
-                {
-                    // Check if the clicked point is on the NavMesh
-                    NavMeshHit navHit;
-                    if (NavMesh.SamplePosition(hitInfo.point, out navHit, 1.0f, NavMesh.AllAreas))
-                    {
-                        // If we found a valid position on the NavMesh,
-                        // and we have a selected unit, then set its destination.
-                        var selectedUnit = BattleController.Instance.SelectedUnit;
-                        if (selectedUnit != null && selectedUnit.IsAlive)
-                        {
-                            // Move the unit
-                            selectedUnit.SetDestination(navHit.position);
-                        }
-                    }
-                }
+        private void Update() {
+            if (!Input.GetMouseButtonDown(0)) return;
+
+            TryMoveSelectedUnit();
+        }
+
+        #endregion
+        #region Movement
+
+        /// <summary>
+        /// Attempts to move the currently selected unit to the clicked NavMesh point.
+        /// </summary>
+        private void TryMoveSelectedUnit() {
+            var mainCamera = UnityEngine.Camera.main;
+            if (mainCamera == null) return;
+
+            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            if (!Physics.Raycast(ray, out var hitInfo, MaxRayDistance)) return;
+            if (!NavMesh.SamplePosition(hitInfo.point, out var navHit, NavMeshSampleRadius, NavMesh.AllAreas)) return;
+
+            var selectedUnit = BattleController.Instance.SelectedUnit;
+            if (selectedUnit != null && selectedUnit.IsAlive) {
+                selectedUnit.SetDestination(navHit.position);
             }
         }
+
+        #endregion
     }
 }

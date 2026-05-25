@@ -2,62 +2,84 @@ using System;
 using System.Collections.Generic;
 using _Scripts.Units;
 using UnityEngine;
-using UnityEngine.UI;
 using Unit = _Scripts.Units.Unit;
 
 namespace _Scripts.GameManagement {
+    /// <summary>
+    /// Tracks active units, selection, battle start, and win/loss state.
+    /// </summary>
     public class BattleController : Singleton<BattleController> {
-        private List<Unit> _teamPlayerUnits = new (), _teamAIUnits = new ();
-        private bool _battleResolved;
-        private bool _battleStarted;
-        public Unit SelectedUnit { get; private set; }
-        
 
-        
+        #region Variables
+
+        private readonly List<Unit> _teamPlayerUnits = new(); // Player-owned units registered in the battle.
+        private readonly List<Unit> _teamAIUnits = new();     // AI-owned units registered in the battle.
+        private bool _battleResolved;                         // True once a win/loss/draw has been reported.
+        private bool _battleStarted;                          // True once registered units have been released.
+
+        public Unit SelectedUnit { get; private set; }
+
+        #endregion
+        #region Unity Methods
+
+        private void Update() {
+            TryStartBattle();
+            CheckWinLoseConditions();
+            HandleSelectedUnitInput();
+        }
+
+        #endregion
+        #region Selection
+
         /// <summary>
-        /// Selects a unit.
+        /// Selects a unit and clears the previous unit highlight.
         /// </summary>
-        /// <param name="unit"></param>
+        /// <param name="unit">The unit to select.</param>
         public void SelectUnit(Unit unit) {
-            if(SelectedUnit != null) {
-                SelectedUnit.GetComponentInChildren<SelectedUnit>().DeselectUnit();
+            if (SelectedUnit != null) {
+                SelectedUnit.GetComponentInChildren<SelectedUnit>()?.DeselectUnit();
             }
+
             SelectedUnit = unit;
         }
-        
-        public void ClearAllPlayerUnits() {
-            _teamPlayerUnits.Clear();
+
+        /// <summary>
+        /// Clears the currently selected unit.
+        /// </summary>
+        public void ClearSelectedUnit() {
+            if (SelectedUnit != null) {
+                SelectedUnit.GetComponentInChildren<SelectedUnit>()?.DeselectUnit();
+            }
+
+            SelectedUnit = null;
         }
 
         /// <summary>
-        /// Clears the selected unit.
+        /// Clears registered player units, usually after pre-game placement is reset.
         /// </summary>
-        public void ClearSelectedUnit() {
-            if(SelectedUnit != null) {
-                SelectedUnit.GetComponentInChildren<SelectedUnit>().DeselectUnit();
-            }
-            SelectedUnit = null;
+        public void ClearAllPlayerUnits() {
+            _teamPlayerUnits.Clear();
+            ClearSelectedUnit();
         }
-        
+
+        #endregion
+        #region Registration
+
         /// <summary>
-        /// Adds a unit to the battle controller.
+        /// Adds a unit to the matching team list.
         /// </summary>
-        /// <param name="unit"></param>
-        /// <param name="team"></param>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <param name="unit">The unit being registered.</param>
+        /// <param name="team">The unit's team.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when an unknown team is passed.</exception>
         public void AddUnit(Unit unit, Team team) {
             if (unit == null) return;
 
             switch (team) {
                 case Team.AI:
-                    if (!_teamAIUnits.Contains(unit)) {
-                        _teamAIUnits.Add(unit);
-                    }
+                    AddUniqueUnit(_teamAIUnits, unit);
                     break;
                 case Team.Player:
-                    if (!_teamPlayerUnits.Contains(unit)) {
-                        _teamPlayerUnits.Add(unit);
-                    }
+                    AddUniqueUnit(_teamPlayerUnits, unit);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(team), team, null);
@@ -65,144 +87,151 @@ namespace _Scripts.GameManagement {
 
             Debug.Log($"Registered {team} unit '{unit.name}'. Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
         }
-        
+
         /// <summary>
-        /// Removes a unit from the battle controller.
+        /// Removes a unit from whichever team owns it.
         /// </summary>
-        /// <param name="unit"></param>
+        /// <param name="unit">The unit to remove.</param>
         public void RemoveUnit(Unit unit) {
-            if (_teamAIUnits.Contains(unit)) {
-                _teamAIUnits.Remove(unit);
-            }
-            else if (_teamPlayerUnits.Contains(unit)) {
-                _teamPlayerUnits.Remove(unit);
+            _teamAIUnits.Remove(unit);
+            _teamPlayerUnits.Remove(unit);
+        }
+
+        /// <summary>
+        /// Adds a unit to a list once.
+        /// </summary>
+        /// <param name="units">The target team list.</param>
+        /// <param name="unit">The unit to add.</param>
+        private static void AddUniqueUnit(List<Unit> units, Unit unit) {
+            if (!units.Contains(unit)) {
+                units.Add(unit);
             }
         }
 
-
-        
-
+        #endregion
+        #region Target Queries
 
         /// <summary>
-        /// Finds the closest target to the source unit.
+        /// Finds the closest opposing unit to a source unit.
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="team"></param>
-        /// <returns></returns>
+        /// <param name="source">The unit searching for a target.</param>
+        /// <param name="team">The source unit's team.</param>
+        /// <returns>The closest living opposing unit, or null.</returns>
         public Unit FindClosestTarget(Unit source, Team team) {
-            
             var targets = team == Team.Player ? _teamAIUnits : _teamPlayerUnits;
-            var closest = FindClosest(source, targets);
-            if (closest != null) {
-                return closest;
-            }
-
-            return null;
-        }
-        
-        /// <summary>
-        /// Gets the units of the opposing team for a unit.
-        /// </summary>
-        /// <param name="myTeam"></param>
-        /// <returns></returns>
-        public List<Unit> GetOpposingUnits(Team myTeam)
-        {
-            // If "myTeam" is Player, return the AI units; if "myTeam" is AI, return the Player units.
-            return (myTeam == Team.Player) ? _teamAIUnits : _teamPlayerUnits;
+            return FindClosest(source, targets);
         }
 
+        /// <summary>
+        /// Gets all registered opposing units for a team.
+        /// </summary>
+        /// <param name="myTeam">The querying unit's team.</param>
+        /// <returns>The opposing team list.</returns>
+        public List<Unit> GetOpposingUnits(Team myTeam) {
+            return myTeam == Team.Player ? _teamAIUnits : _teamPlayerUnits;
+        }
 
         /// <summary>
-        /// Finds the closest unit to the source unit.
+        /// Finds the closest living unit from a candidate list.
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="targets"></param>
-        /// <returns></returns>
-        private Unit FindClosest(Unit source, List<Unit> targets)
-        {
+        /// <param name="source">The source unit.</param>
+        /// <param name="targets">Candidate targets.</param>
+        /// <returns>The closest living target, or null.</returns>
+        private static Unit FindClosest(Unit source, List<Unit> targets) {
             Unit closest = null;
             var closestDist = Mathf.Infinity;
 
-            foreach (Unit t in targets)
-            {
-                if (!t.IsAlive) continue;
-                var dist = Vector2.Distance(source.transform.position, t.transform.position);
-                if (dist < closestDist)
-                {
-                    closestDist = dist;
-                    closest = t;
-                }
+            foreach (var target in targets) {
+                if (target == null || !target.IsAlive) continue;
+
+                var dist = Vector2.Distance(source.transform.position, target.transform.position);
+                if (!(dist < closestDist)) continue;
+
+                closestDist = dist;
+                closest = target;
             }
+
             return closest;
         }
 
-        private void Update()
-        {
-            TryStartBattle();
-            CheckWinLoseConditions();
-#if UNITY_ANDROID
-            // ----- ANDROID TOUCH INPUT -----
-            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
-            {
-                Vector3 tapPosition = Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position);
-                tapPosition.z = 0f; 
-                Debug.Log("Android tap at world position: " + tapPosition);
-            }
-#else
-            // Left-click check
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) return;
+        #endregion
+        #region Battle State
 
-                var inputVector = UnityEngine.Camera.main.ScreenToWorldPoint(Input.mousePosition);
-    
-                if (SelectedUnit != null && SelectedUnit.IsAlive) {
-                    SelectedUnit.SetDestination(inputVector);
-                }
-            }
-#endif
-            
-        }
-
+        /// <summary>
+        /// Runs once when the game enters active play.
+        /// </summary>
         private void TryStartBattle() {
             if (_battleStarted) return;
             if (GameManager.Instance == null || GameManager.Instance.GameState != GameState.Playing) return;
 
             _battleStarted = true;
-
-
-
             Debug.Log($"Battle started. Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
         }
 
+        /// <summary>
+        /// Checks for win, loss, or draw while the game is playing.
+        /// </summary>
         private void CheckWinLoseConditions() {
             if (_battleResolved) return;
             if (GameManager.Instance == null || GameManager.Instance.GameState != GameState.Playing) return;
 
-            _teamPlayerUnits.RemoveAll(unit => unit == null);
-            _teamAIUnits.RemoveAll(unit => unit == null);
+            RemoveMissingUnits();
 
-            var teamAAlive = _teamPlayerUnits.Exists(u => u != null && u.IsAlive);
-            var teamBAlive = _teamAIUnits.Exists(u => u != null && u.IsAlive);
+            var teamAAlive = _teamPlayerUnits.Exists(unit => unit != null && unit.IsAlive);
+            var teamBAlive = _teamAIUnits.Exists(unit => unit != null && unit.IsAlive);
 
-            if (!teamAAlive && teamBAlive)
-            {
-                _battleResolved = true;
-                Debug.Log($"Team B Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
-                GameManager.Instance.EndGame();
+            if (!teamAAlive && teamBAlive) {
+                ResolveBattle($"Team B Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
             }
-            else if (!teamBAlive && teamAAlive)
-            {
-                _battleResolved = true;
-                Debug.Log($"Team A Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
-                GameManager.Instance.EndGame();
+            else if (!teamBAlive && teamAAlive) {
+                ResolveBattle($"Team A Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
             }
-            else if (!teamAAlive && !teamBAlive)
-            {
-                _battleResolved = true;
-                Debug.Log($"Draw or Both Defeated! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
-                GameManager.Instance.EndGame();
+            else if (!teamAAlive && !teamBAlive) {
+                ResolveBattle($"Draw or Both Defeated! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
             }
         }
+
+        /// <summary>
+        /// Marks the battle as complete and informs the game manager.
+        /// </summary>
+        /// <param name="message">The debug result message.</param>
+        private void ResolveBattle(string message) {
+            _battleResolved = true;
+            Debug.Log(message);
+            GameManager.Instance.EndGame();
+        }
+
+        /// <summary>
+        /// Removes destroyed units from both registered team lists.
+        /// </summary>
+        private void RemoveMissingUnits() {
+            _teamPlayerUnits.RemoveAll(unit => unit == null);
+            _teamAIUnits.RemoveAll(unit => unit == null);
+        }
+
+        #endregion
+        #region Input
+
+        /// <summary>
+        /// Handles tap/click commands for the currently selected unit.
+        /// </summary>
+        private void HandleSelectedUnitInput() {
+#if UNITY_ANDROID
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) {
+                var tapPosition = UnityEngine.Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position);
+                tapPosition.z = 0f;
+                Debug.Log("Android tap at world position: " + tapPosition);
+            }
+#else
+            if (!Input.GetMouseButtonDown(0)) return;
+            if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) return;
+            if (SelectedUnit == null || !SelectedUnit.IsAlive) return;
+
+            var inputVector = UnityEngine.Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            SelectedUnit.SetDestination(inputVector);
+#endif
+        }
+
+        #endregion
     }
 }

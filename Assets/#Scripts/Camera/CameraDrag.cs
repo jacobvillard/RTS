@@ -1,22 +1,30 @@
-using System;
 using UnityEngine;
 
 namespace _Scripts.Camera {
     /// <summary>
-    /// This script allows the camera to be dragged around the scene.
+    /// Allows the camera to pan and zoom around the battle scene.
     /// </summary>
     public class CameraDrag : MonoBehaviour {
-        [SerializeField] private float dragSpeed = 2;
-        [SerializeField] private Vector2 minLimits; // Minimum X and Y position
-        [SerializeField] private Vector2 maxLimits; // Maximum X and Y position
-        [SerializeField] private float zoomSpeed = 0.1f; // Speed of zooming
-        [SerializeField] private float minZoom = 5f; // Minimum camera size for zooming
-        [SerializeField] private float maxZoom = 20f; // Maximum camera size for zooming
-        
-        private Vector3 _dragOrigin;
-        private UnityEngine.Camera _camera;
-        private float _actualDragSpeed = 0;
-        
+
+        #region Variables
+
+        [Header("Drag")]
+        [SerializeField] private float dragSpeed = 2; // Base camera drag speed.
+        [SerializeField] private Vector2 minLimits;   // Minimum world position.
+        [SerializeField] private Vector2 maxLimits;   // Maximum world position.
+
+        [Header("Zoom")]
+        [SerializeField] private float zoomSpeed = 0.1f; // Zoom speed multiplier.
+        [SerializeField] private float minZoom = 5f;     // Minimum orthographic size.
+        [SerializeField] private float maxZoom = 20f;    // Maximum orthographic size.
+
+        private Vector3 _dragOrigin;             // Previous pointer position during drag.
+        private UnityEngine.Camera _camera;      // Main camera being controlled.
+        private float _actualDragSpeed;          // Drag speed adjusted by zoom level.
+
+        #endregion
+        #region Unity Methods
+
         private void Start() {
             _camera = UnityEngine.Camera.main;
         }
@@ -31,57 +39,61 @@ namespace _Scripts.Camera {
 #endif
             ClampCameraPosition();
         }
+
+        #endregion
+        #region Drag
         
         /// <summary>
-        /// Handles mouse input for camera dragging (for Unity Editor or standalone builds).
+        /// Handles mouse drag input for editor and desktop builds.
         /// </summary>
         private void HandleMouseInput() {
             if (Input.GetMouseButtonDown(0)) {
-                _dragOrigin = Input.mousePosition; // Save the starting position
+                _dragOrigin = Input.mousePosition;
             }
 
-            if (Input.GetMouseButton(0)) {
-                var currentPosition = Input.mousePosition;
-                var difference = _dragOrigin - currentPosition; // Calculate difference
+            if (!Input.GetMouseButton(0)) return;
 
-                _actualDragSpeed = dragSpeed * (_camera.orthographicSize / 5); // Adjust drag speed based on zoom level
-                
-                if (difference != Vector3.zero) { // Only move if there is a difference
-                    var move = new Vector3(difference.x * _actualDragSpeed * Time.unscaledDeltaTime, difference.y * _actualDragSpeed * Time.unscaledDeltaTime, 0);
-                    transform.Translate(move, Space.World);
-                }
-
-                _dragOrigin = currentPosition; // Update the previous position
-            }
+            DragTo(Input.mousePosition);
         }
 
         /// <summary>
-        /// Handles touch input for camera dragging (on mobile devices).
+        /// Handles single-touch drag input for mobile builds.
         /// </summary>
         private void HandleTouchInput() {
-            if (Input.touchCount == 1) { // Only handle single touch input
-                var touch = Input.GetTouch(0);
+            if (Input.touchCount != 1) return;
 
-                if (touch.phase == TouchPhase.Began) {
-                    _dragOrigin = touch.position; // Save the starting position
-                } else if (touch.phase == TouchPhase.Moved) {
-                    var currentPosition = touch.position;
-                    var difference = (Vector3)_dragOrigin - (Vector3)currentPosition; // Calculate difference
-                    
-                    _actualDragSpeed = dragSpeed * (_camera.orthographicSize / 5); // Adjust drag speed based on zoom level
-
-                    if (difference != Vector3.zero) { // Only move if there is a difference
-                        var move = new Vector3(difference.x * _actualDragSpeed * Time.unscaledDeltaTime, difference.y * _actualDragSpeed * Time.unscaledDeltaTime, 0);
-                        transform.Translate(move, Space.World);
-                    }
-
-                    _dragOrigin = currentPosition; // Update the previous position
-                }
+            var touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began) {
+                _dragOrigin = touch.position;
+            }
+            else if (touch.phase == TouchPhase.Moved) {
+                DragTo(touch.position);
             }
         }
-        
+
         /// <summary>
-        /// Clamps the camera's position within defined X and Y bounds.
+        /// Moves the camera based on pointer movement.
+        /// </summary>
+        /// <param name="currentPosition">The current pointer position.</param>
+        private void DragTo(Vector3 currentPosition) {
+            if (_camera == null) return;
+
+            var difference = _dragOrigin - currentPosition;
+            _actualDragSpeed = dragSpeed * (_camera.orthographicSize / 5);
+
+            if (difference != Vector3.zero) {
+                var move = new Vector3(
+                    difference.x * _actualDragSpeed * Time.unscaledDeltaTime,
+                    difference.y * _actualDragSpeed * Time.unscaledDeltaTime,
+                    0);
+                transform.Translate(move, Space.World);
+            }
+
+            _dragOrigin = currentPosition;
+        }
+
+        /// <summary>
+        /// Keeps the camera inside the configured world bounds.
         /// </summary>
         private void ClampCameraPosition() {
             var clampedX = Mathf.Clamp(transform.position.x, minLimits.x, maxLimits.x);
@@ -89,38 +101,43 @@ namespace _Scripts.Camera {
             transform.position = new Vector3(clampedX, clampedY, transform.position.z);
         }
 
+        #endregion
+        #region Zoom
+
         /// <summary>
-        /// Handles mouse scroll wheel zooming for standalone platforms.
+        /// Handles mouse scroll wheel zooming.
         /// </summary>
         private void HandleScrollZoom() {
-            if (_camera.orthographic) {
-                var scroll = Input.GetAxis("Mouse ScrollWheel");
-                _camera.orthographicSize -= scroll * zoomSpeed * 100; // Adjust zoom speed
-                _camera.orthographicSize = Mathf.Clamp(_camera.orthographicSize, minZoom, maxZoom); // Clamp zoom
-            }
+            if (_camera == null || !_camera.orthographic) return;
+
+            var scroll = Input.GetAxis("Mouse ScrollWheel");
+            _camera.orthographicSize -= scroll * zoomSpeed * 100;
+            ClampZoom();
         }
 
         /// <summary>
-        /// Handles pinch zooming for mobile devices.
+        /// Handles mobile pinch zooming.
         /// </summary>
         private void HandlePinchZoom() {
-            if (Input.touchCount == 2) {
-                var touch0 = Input.GetTouch(0);
-                var touch1 = Input.GetTouch(1);
+            if (_camera == null || Input.touchCount != 2) return;
 
-                // Calculate the difference in positions between the current and previous frames
-                var prevTouchDelta = (touch0.position - touch0.deltaPosition) - (touch1.position - touch1.deltaPosition);
-                var currentTouchDelta = touch0.position - touch1.position;
+            var touch0 = Input.GetTouch(0);
+            var touch1 = Input.GetTouch(1);
+            var prevTouchDelta = (touch0.position - touch0.deltaPosition) - (touch1.position - touch1.deltaPosition);
+            var currentTouchDelta = touch0.position - touch1.position;
+            var deltaMagnitudeDiff = prevTouchDelta.magnitude - currentTouchDelta.magnitude;
 
-                // Calculate the difference in distances
-                var deltaMagnitudeDiff = prevTouchDelta.magnitude - currentTouchDelta.magnitude;
-
-                // Adjust the orthographic size
-                _camera.orthographicSize += deltaMagnitudeDiff * zoomSpeed;
-                _camera.orthographicSize = Mathf.Clamp(_camera.orthographicSize, minZoom, maxZoom); // Clamp zoom
-            }
+            _camera.orthographicSize += deltaMagnitudeDiff * zoomSpeed;
+            ClampZoom();
         }
 
+        /// <summary>
+        /// Keeps the camera zoom inside the configured limits.
+        /// </summary>
+        private void ClampZoom() {
+            _camera.orthographicSize = Mathf.Clamp(_camera.orthographicSize, minZoom, maxZoom);
+        }
 
+        #endregion
     }
 }

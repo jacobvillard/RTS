@@ -2,19 +2,27 @@ using UnityEngine;
 
 namespace _Scripts.GameManagement {
     /// <summary>
-    /// Singleton pattern
+    /// Lightweight MonoBehaviour singleton base for scene-level managers.
     /// </summary>
-    public abstract class Singleton<T> : MonoBehaviour where T : Component
-    {
-        public static T Instance;
+    /// <typeparam name="T">The component type that owns the singleton instance.</typeparam>
+    public abstract class Singleton<T> : MonoBehaviour where T : Component {
 
-        protected virtual void Awake()
-        {
-            if (Instance != null) {
-                string typename = typeof(T).Name;
-                Debug.LogWarning($"More that one instance of {typename} found.");
+        #region Variables
+
+        public static T Instance; // Globally accessible manager instance.
+
+        #endregion
+        #region Unity Methods
+
+        protected virtual void Awake() {
+            if (Instance != null && Instance != this) {
+                Debug.LogWarning($"More than one instance of {typeof(T).Name} found.");
+                return;
             }
+
             Instance = this as T;
         }
+
+        #endregion
     }
 }

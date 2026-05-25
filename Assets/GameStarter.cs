@@ -1,27 +1,34 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class GameStarter : MonoBehaviour
-{
-    [SerializeField] private UnitPlacer unitPlacer;
-    [SerializeField] private GameObject preGameUI;
+/// <summary>
+/// Handles the transition from pre-game placement into active battle.
+/// </summary>
+public class GameStarter : MonoBehaviour {
 
-    
-    // Start is called before the first frame update
-    public void StartGame()
-    {
-        if(unitPlacer != null)
-            if (unitPlacer.placedUnitsCount == 0) {
-                Debug.LogWarning(
-                    "No units placed! Starting the game without any units may lead to unexpected behaviour.");
-                return;
-            }
-        
+    #region Variables
+
+    [Header("Scene References")]
+    [SerializeField] private UnitPlacer unitPlacer;     // Tracks whether the player has placed units.
+    [SerializeField] private GameObject preGameUI;      // UI shown during unit placement.
+
+    #endregion
+    #region Public Methods
+
+    /// <summary>
+    /// Starts the battle if the player has placed at least one unit.
+    /// </summary>
+    public void StartGame() {
+        if (unitPlacer != null && unitPlacer.placedUnitsCount == 0) {
+            Debug.LogWarning("No units placed! Starting the game without any units may lead to unexpected behaviour.");
+            return;
+        }
+
         GameManager.Instance.StartGame();
-        preGameUI.SetActive(false);
 
+        if (preGameUI != null) {
+            preGameUI.SetActive(false);
+        }
     }
 
-
+    #endregion
 }

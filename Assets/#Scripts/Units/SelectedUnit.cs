@@ -1,55 +1,82 @@
 using _Scripts.GameManagement;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.Serialization;
 
 namespace _Scripts.Units {
     /// <summary>
-    /// Manages the selected unit.
+    /// Handles hover and selected visuals for a unit.
     /// </summary>
     public class SelectedUnit : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
-        // The outline object
-        [SerializeField] private GameObject outline;
-        private bool _isSelected;
-        public bool isDead;
+
+        #region Variables
+
+        [Header("Visuals")]
+        [SerializeField] private GameObject outline; // Selection/hover outline object.
+
+        private bool _isSelected; // True while this unit is actively selected.
+        public bool isDead;       // Prevents selection visuals after death.
+
+        #endregion
+        #region Unity Methods
     
         private void Start() {
-            if(outline == null) outline = transform.GetChild(0).gameObject;
-            outline.SetActive(false);
+            if (outline == null && transform.childCount > 0) {
+                outline = transform.GetChild(0).gameObject;
+            }
+
+            if (outline != null) {
+                outline.SetActive(false);
+            }
         }
+
+        #endregion
+        #region Pointer Events
         
-        //On pointer enter, show the outline
+        /// <summary>
+        /// Shows the outline when the pointer enters the unit.
+        /// </summary>
+        /// <param name="eventData">Pointer event information.</param>
         public void OnPointerEnter(PointerEventData eventData) {
-            if(isDead) return;
+            if (isDead || outline == null) return;
+
             outline.SetActive(true);
         }
         
         /// <summary>
-        /// On pointer exit, hide the outline.
+        /// Hides the outline when the pointer exits and the unit is not selected.
         /// </summary>
-        /// <param name="eventData"></param>
+        /// <param name="eventData">Pointer event information.</param>
         public void OnPointerExit(PointerEventData eventData) {
-            if(_isSelected) return;
+            if (_isSelected || outline == null) return;
+
             outline.SetActive(false);
         }
+
+        #endregion
+        #region Selection
         
         /// <summary>
-        /// Selects the unit.
+        /// Selects this unit through the battle controller.
         /// </summary>
         public void SelectUnit() {
-            if(_isSelected) return;
+            if (_isSelected) return;
+
             Debug.Log("<color=red>Unit Selected:</color>");
             BattleController.Instance.SelectUnit(GetComponentInParent<Unit>());
             _isSelected = true;
         }
         
         /// <summary>
-        /// Deselects the unit.
+        /// Deselects this unit and hides its outline.
         /// </summary>
         public void DeselectUnit() {
-            outline.SetActive(false);
+            if (outline != null) {
+                outline.SetActive(false);
+            }
+
             _isSelected = false;
         }
+
+        #endregion
     }
 }
