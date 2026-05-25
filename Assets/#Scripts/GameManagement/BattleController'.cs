@@ -8,6 +8,8 @@ using Unit = _Scripts.Units.Unit;
 namespace _Scripts.GameManagement {
     public class BattleController : Singleton<BattleController> {
         private List<Unit> _teamPlayerUnits = new (), _teamAIUnits = new ();
+        private bool _battleResolved;
+        private bool _battleStarted;
         public Unit SelectedUnit { get; private set; }
         
 
@@ -21,6 +23,10 @@ namespace _Scripts.GameManagement {
                 SelectedUnit.GetComponentInChildren<SelectedUnit>().DeselectUnit();
             }
             SelectedUnit = unit;
+        }
+        
+        public void ClearAllPlayerUnits() {
+            _teamPlayerUnits.Clear();
         }
 
         /// <summary>
@@ -40,16 +46,24 @@ namespace _Scripts.GameManagement {
         /// <param name="team"></param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public void AddUnit(Unit unit, Team team) {
+            if (unit == null) return;
+
             switch (team) {
                 case Team.AI:
-                    _teamAIUnits.Add(unit);
+                    if (!_teamAIUnits.Contains(unit)) {
+                        _teamAIUnits.Add(unit);
+                    }
                     break;
                 case Team.Player:
-                    _teamPlayerUnits.Add(unit);
+                    if (!_teamPlayerUnits.Contains(unit)) {
+                        _teamPlayerUnits.Add(unit);
+                    }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(team), team, null);
             }
+
+            Debug.Log($"Registered {team} unit '{unit.name}'. Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
         }
         
         /// <summary>
@@ -124,22 +138,8 @@ namespace _Scripts.GameManagement {
 
         private void Update()
         {
-            // Check win/lose conditions
-            var teamAAlive = _teamPlayerUnits.Exists(u => u.IsAlive);
-            var teamBAlive = _teamAIUnits.Exists(u => u.IsAlive);
-
-            if (!teamAAlive && teamBAlive)
-            {
-                Debug.Log("Team B Wins!");
-            }
-            else if (!teamBAlive && teamAAlive)
-            {
-                Debug.Log("Team A Wins!");
-            }
-            else if (!teamAAlive && !teamBAlive)
-            {
-                Debug.Log("Draw or Both Defeated!");
-            }
+            TryStartBattle();
+            CheckWinLoseConditions();
 #if UNITY_ANDROID
             // ----- ANDROID TOUCH INPUT -----
             if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
@@ -152,6 +152,8 @@ namespace _Scripts.GameManagement {
             // Left-click check
             if (Input.GetMouseButtonDown(0))
             {
+                if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) return;
+
                 var inputVector = UnityEngine.Camera.main.ScreenToWorldPoint(Input.mousePosition);
     
                 if (SelectedUnit != null && SelectedUnit.IsAlive) {
@@ -160,6 +162,47 @@ namespace _Scripts.GameManagement {
             }
 #endif
             
+        }
+
+        private void TryStartBattle() {
+            if (_battleStarted) return;
+            if (GameManager.Instance == null || GameManager.Instance.GameState != GameState.Playing) return;
+
+            _battleStarted = true;
+
+
+
+            Debug.Log($"Battle started. Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+        }
+
+        private void CheckWinLoseConditions() {
+            if (_battleResolved) return;
+            if (GameManager.Instance == null || GameManager.Instance.GameState != GameState.Playing) return;
+
+            _teamPlayerUnits.RemoveAll(unit => unit == null);
+            _teamAIUnits.RemoveAll(unit => unit == null);
+
+            var teamAAlive = _teamPlayerUnits.Exists(u => u != null && u.IsAlive);
+            var teamBAlive = _teamAIUnits.Exists(u => u != null && u.IsAlive);
+
+            if (!teamAAlive && teamBAlive)
+            {
+                _battleResolved = true;
+                Debug.Log($"Team B Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+                GameManager.Instance.EndGame();
+            }
+            else if (!teamBAlive && teamAAlive)
+            {
+                _battleResolved = true;
+                Debug.Log($"Team A Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+                GameManager.Instance.EndGame();
+            }
+            else if (!teamAAlive && !teamBAlive)
+            {
+                _battleResolved = true;
+                Debug.Log($"Draw or Both Defeated! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+                GameManager.Instance.EndGame();
+            }
         }
     }
 }

@@ -47,7 +47,7 @@ namespace _Scripts.Camera {
                 _actualDragSpeed = dragSpeed * (_camera.orthographicSize / 5); // Adjust drag speed based on zoom level
                 
                 if (difference != Vector3.zero) { // Only move if there is a difference
-                    var move = new Vector3(difference.x * _actualDragSpeed * Time.deltaTime, difference.y * _actualDragSpeed * Time.deltaTime, 0);
+                    var move = new Vector3(difference.x * _actualDragSpeed * Time.unscaledDeltaTime, difference.y * _actualDragSpeed * Time.unscaledDeltaTime, 0);
                     transform.Translate(move, Space.World);
                 }
 
@@ -71,7 +71,7 @@ namespace _Scripts.Camera {
                     _actualDragSpeed = dragSpeed * (_camera.orthographicSize / 5); // Adjust drag speed based on zoom level
 
                     if (difference != Vector3.zero) { // Only move if there is a difference
-                        var move = new Vector3(difference.x * _actualDragSpeed * Time.deltaTime, difference.y * _actualDragSpeed * Time.deltaTime, 0);
+                        var move = new Vector3(difference.x * _actualDragSpeed * Time.unscaledDeltaTime, difference.y * _actualDragSpeed * Time.unscaledDeltaTime, 0);
                         transform.Translate(move, Space.World);
                     }
 

@@ -47,10 +47,17 @@ namespace _Scripts.Units {
         [SerializeField] private SpriteRenderer spriteRenderer;     // Main sprite renderer
         [SerializeField] private SpriteRenderer childSpriteRenderer;// Child sprite renderer 
         private NavMeshAgent _agent;                                // The NavMeshAgent component of the unit
+        private Rigidbody2D _rigidbody2D;                           // Rigidbody that performs the actual 2D movement/collision
         private Vector2 _holdPosition;                               // Holds the position we should remain at when in "Hold" state
         private UnitState _previousState;                           // Keep track of previous state to detect changes
         [SerializeField] private float arrowSpeed = 5f;             // Speed of the arrow
+        [SerializeField] private bool debugTargeting;               // Logs target detection and attack decisions for this unit
         private GameObject _targetPosCrossPrefab;                   // The target position cross prefab
+        private readonly List<MapTerrainZone> _activeTerrainZones = new();
+        private readonly List<MapTerrainZone> _activeForestZones = new();
+        private const float MinimumStoppingDistance = 0.55f;
+        private float _currentSpeedMultiplier = 1f;
+        public bool IsInForest => _activeForestZones.Count > 0;
         
         
         #endregion
@@ -60,14 +67,27 @@ namespace _Scripts.Units {
             if (!spriteRenderer) spriteRenderer = GetComponent<SpriteRenderer>();
             if (!childSpriteRenderer && transform.childCount > 0) 
                 childSpriteRenderer = transform.GetChild(0).GetComponent<SpriteRenderer>();
-           
+
+            ConfigureRigidbody2D();
+        }
+
+        private void ConfigureRigidbody2D() {
+            _rigidbody2D = GetComponent<Rigidbody2D>();
+            if (_rigidbody2D == null) return;
+
+            _rigidbody2D.bodyType = RigidbodyType2D.Dynamic;
+            _rigidbody2D.gravityScale = 0f;
+            _rigidbody2D.velocity = Vector2.zero;
+            _rigidbody2D.angularVelocity = 0f;
         }
 
         private void Start() {
             _agent = GetComponent<NavMeshAgent>();
+            _agent.updatePosition = _rigidbody2D == null;
             _agent.updateRotation = false;
             _agent.updateUpAxis = false;
-            _agent.speed = moveSpeed;
+            UpdateStoppingDistance();
+            UpdateAgentSpeed();
             
             _holdPosition = new Vector2(transform.position.x,transform.position.y) ;
             
@@ -97,6 +117,29 @@ namespace _Scripts.Units {
                 : type.attackDamage;
             attackCooldown = type.attackCooldown;
             this.team = teamInit;
+            UpdateStoppingDistance();
+        }
+
+
+        
+
+        public void EnterTerrainZone(MapTerrainZone terrainZone) {
+            if (terrainZone == null || _activeTerrainZones.Contains(terrainZone)) return;
+
+            _activeTerrainZones.Add(terrainZone);
+            if (terrainZone.ProvidesForestCover && !_activeForestZones.Contains(terrainZone)) {
+                _activeForestZones.Add(terrainZone);
+            }
+
+            UpdateAgentSpeed();
+        }
+
+        public void ExitTerrainZone(MapTerrainZone terrainZone) {
+            if (terrainZone == null) return;
+
+            _activeTerrainZones.Remove(terrainZone);
+            _activeForestZones.Remove(terrainZone);
+            UpdateAgentSpeed();
         }
         
         #endregion
@@ -104,11 +147,23 @@ namespace _Scripts.Units {
         private void Update() {
             if (!IsAlive) return;
 
-            TryAttack();            // Attempt to attack
             RefreshTargetUnits();   // Refresh the list of target units
             UpdateCurrentTarget();  // Update the current target
+            TryAttack();            // Attempt to attack
             StateManagement();      // Manage the state of the unit
             FixZedPos();            // Fix Z position
+        }
+
+        private void FixedUpdate() {
+            if (!IsAlive || _agent == null || _rigidbody2D == null) return;
+
+            var nextPosition = Vector2.MoveTowards(
+                _rigidbody2D.position,
+                new Vector2(_agent.nextPosition.x, _agent.nextPosition.y),
+                _agent.speed * Time.fixedDeltaTime);
+
+            _rigidbody2D.MovePosition(nextPosition);
+            _agent.nextPosition = transform.position;
         }
 
         /// <summary>
@@ -208,29 +263,16 @@ namespace _Scripts.Units {
         /// </summary>
         private void RefreshTargetUnits()
         {
-            // 1. Get all opposing units from the BattleController
             var opposingUnits = BattleController.Instance.GetOpposingUnits(team);
-            
-    
-            // 3. Loop through each opposing unit and check conditions
-            foreach (var candidate in opposingUnits)
-            {
-                // Skip if dead
-                if (candidate == null || !candidate.IsAlive) 
-                    if(targetUnits.Contains(candidate)) targetUnits.Remove(candidate);
-        
-                // Distance check
-                var dist = Vector2.Distance(transform.position, candidate.transform.position);
-                if (dist > attackRange)  // Example: only consider up to 10 units away
-                    if(targetUnits.Contains(candidate)) targetUnits.Remove(candidate);
-                
-        
-                // Optionally check line of sight
-                if (!HasLineOfSight(candidate))
-                    if(targetUnits.Contains(candidate)) targetUnits.Remove(candidate);
-        
-                // If all conditions pass, add to _targetUnits
-                if(dist < attackRange ) targetUnits.Add(candidate);
+
+            LogTargeting($"checking {opposingUnits.Count} opposing units. Current target list: {targetUnits.Count}");
+
+            targetUnits.RemoveAll(candidate => !IsValidTarget(candidate));
+
+            foreach (var candidate in opposingUnits) {
+                if (!IsValidTarget(candidate) || targetUnits.Contains(candidate)) continue;
+                targetUnits.Add(candidate);
+                LogTargeting($"added target '{candidate.name}'. Target list now: {targetUnits.Count}");
             }
         }
         
@@ -246,7 +288,7 @@ namespace _Scripts.Units {
 
             var closestDist = Mathf.Infinity;
             foreach (var t in targetUnits) {
-                if(t == null) return;
+                if(t == null) continue;
                 var dist = Vector2.Distance(transform.position, t.transform.position);
                 if (!(dist < closestDist)) continue;
                 closestDist = dist;
@@ -256,6 +298,48 @@ namespace _Scripts.Units {
             if(closest == null) return;
             
             _currentTarget = closest;
+        }
+
+        private bool IsValidTarget(Unit candidate) {
+            if (candidate == null) {
+                LogTargeting("candidate rejected: null.");
+                return false;
+            }
+
+            if (!candidate.IsAlive) {
+                LogTargeting($"candidate '{candidate.name}' rejected: dead.");
+                return false;
+            }
+
+            var distance = Vector2.Distance(transform.position, candidate.transform.position);
+            if (distance > attackRange) {
+                LogTargeting($"candidate '{candidate.name}' rejected: distance {distance:0.00} > range {attackRange:0.00}.");
+                return false;
+            }
+
+            if (!CanSeeUnit(candidate)) {
+                LogTargeting($"candidate '{candidate.name}' rejected: hidden by forest rules.");
+                return false;
+            }
+
+            if (!HasLineOfSight(candidate)) {
+                LogTargeting($"candidate '{candidate.name}' rejected: line of sight blocked.");
+                return false;
+            }
+
+            LogTargeting($"candidate '{candidate.name}' valid at distance {distance:0.00}.");
+            return true;
+        }
+
+        private bool CanSeeUnit(Unit target) {
+            if (!target.IsInForest) return true;
+            if (!IsInForest) return false;
+
+            foreach (var forestZone in _activeForestZones) {
+                if (target._activeForestZones.Contains(forestZone)) return true;
+            }
+
+            return false;
         }
         
         /// <summary>
@@ -269,15 +353,18 @@ namespace _Scripts.Units {
 
             Vector2 start = transform.position;
             Vector2 end = target.transform.position;
-            
-            // Raycast from "start" to "end"
-            var hitInfo = Physics2D.Raycast(start, end - start, Vector2.Distance(start, end));
-            if (hitInfo.collider == null) 
-                return false; // We didn't hit anything, so maybe no collider at all.
+            var distance = Vector2.Distance(start, end);
+            if (distance <= Mathf.Epsilon) return true;
 
-            // If we hit the target itself, we consider it a clear line of sight
-            // Otherwise, we must have hit some obstacle.
-            return (hitInfo.collider.gameObject == target.gameObject);
+            var hits = Physics2D.RaycastAll(start, end - start, distance);
+            foreach (var hit in hits) {
+                if (hit.collider == null || hit.collider.isTrigger || hit.collider.gameObject == gameObject) continue;
+                if (hit.collider.GetComponentInParent<Unit>() != null) continue;
+                LogTargeting($"LOS blocked by '{hit.collider.gameObject.name}' on layer '{LayerMask.LayerToName(hit.collider.gameObject.layer)}'.");
+                return false;
+            }
+
+            return true;
         }
     
         #endregion
@@ -381,6 +468,29 @@ namespace _Scripts.Units {
                 _agent.SetDestination(point);
             }
         }
+
+        private void UpdateStoppingDistance() {
+            if (_agent == null) return;
+
+            _agent.stoppingDistance = unitType == UnitType.Ranged
+                ? Mathf.Max(MinimumStoppingDistance, attackRange * 0.8f)
+                : Mathf.Max(MinimumStoppingDistance, attackRange * 0.7f);
+        }
+
+
+
+        private void UpdateAgentSpeed() {
+            _currentSpeedMultiplier = 1f;
+
+            foreach (var terrainZone in _activeTerrainZones) {
+                if (terrainZone == null) continue;
+                _currentSpeedMultiplier = Mathf.Min(_currentSpeedMultiplier, terrainZone.MoveSpeedMultiplier);
+            }
+
+            if (_agent != null) {
+                _agent.speed = moveSpeed * _currentSpeedMultiplier;
+            }
+        }
         
         #endregion
         #region Damage and Death
@@ -392,57 +502,43 @@ namespace _Scripts.Units {
             _attackTimer += Time.deltaTime;
             if (_attackTimer >= attackCooldown) {
                 _attackTimer = 0f;
+                LogTargeting($"attack cooldown ready. Targets available: {targetUnits.Count}. Current target: {(_currentTarget != null ? _currentTarget.name : "none")}");
                 
                 
-                if (unitType == UnitType.Ranged)
-                {
-                    foreach (var targetUnit in targetUnits)
-                    {
-                        // Check if target is in range
-                        if (targetUnit && Vector2.Distance(transform.position, targetUnit.transform.position) <= attackRange)
-                        {
-                            // Calculate flight time = distance / arrowSpeed
-                            var distance    = Vector2.Distance(transform.position, targetUnit.transform.position);
-                            var flightTime  = distance / arrowSpeed;
-
-                            // Start a delayed damage coroutine
-                            StartCoroutine(DelayedDamage(targetUnit, flightTime));
-                        }
-                    }
+                if (unitType == UnitType.Ranged) {
+                    FireMusketAtClosestTarget();
                 }
-                else
-                {
-                    // Melee logic: immediate damage
+                else {
                     foreach (var targetUnit in targetUnits)
                     {
-                        if (targetUnit && Vector2.Distance(transform.position, targetUnit.transform.position) <= attackRange)
+                        if (IsValidTarget(targetUnit))
                         {
+                            LogTargeting($"melee attacking '{targetUnit.name}'.");
                             DamageUnit(targetUnit);
                         }
                     }
                 }
             }
         }
-        
-        
-        /// <summary>
-        /// Waits 'flightTime' seconds, then deals damage (if the target is still valid).
-        /// </summary>
-        private IEnumerator DelayedDamage(Unit target, float flightTime) {
-            yield return new WaitForSeconds(flightTime);
 
-            // Check if target is still alive & in range when "arrow" would arrive
-            if (target && target.IsAlive)
-            {
-                var dist = Vector2.Distance(transform.position, target.transform.position);
-                if (dist <= attackRange)
-                {
-                    DamageUnit(target);
-                }
+        private void FireMusketAtClosestTarget() {
+            UpdateCurrentTarget();
+            if (_currentTarget == null || !IsValidTarget(_currentTarget)) {
+                LogTargeting("musket did not fire: no valid current target.");
+                return;
             }
+
+            LogTargeting($"musket firing at '{_currentTarget.name}'.");
+            MusketProjectile.Spawn(this, _currentTarget, CalculateDamage(_currentTarget), arrowSpeed);
+        }
+
+        public void ApplyProjectileDamage(Unit shooter, float damage) {
+            if (shooter == null || !IsAlive) return;
+            TakeDamage(damage);
         }
         
         private void DamageUnit(Unit target) {
+            LogTargeting($"damaging '{target.name}' for {CalculateDamage(target):0.00}.");
             //Deal damage
             target.TakeDamage(CalculateDamage(target));
                     
@@ -538,6 +634,12 @@ namespace _Scripts.Units {
             }
 
             return hasAdvantage ? attackDamage * 2f : attackDamage;
+        }
+
+        private void LogTargeting(string message) {
+            if (!debugTargeting) return;
+
+            Debug.Log($"[Targeting:{name} | {team} | {unitType}] {message}", this);
         }
         
         #endregion

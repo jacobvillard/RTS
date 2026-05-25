@@ -15,7 +15,7 @@ MonoBehaviour:
   unitType: 1
   health: 100
   moveSpeed: 0.5
-  attackRange: 10
+  attackRange: 5
   attackDamage: 5
-  attackCooldown: 10
+  attackCooldown: 3
   icon: {fileID: 21300000, guid: b63ce664793883b42915bba58b08af71, type: 3}

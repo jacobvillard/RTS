@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 161234247074579900}
   - component: {fileID: 5730340920680881898}
   - component: {fileID: 1136151066501263553}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: AI_Archers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -159,7 +159,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 0
 --- !u!114 &5730340920680881898
 MonoBehaviour:
@@ -212,7 +212,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3396156637565342826}
   - component: {fileID: 2401064245331524487}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Icon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
