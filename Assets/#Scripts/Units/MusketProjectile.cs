@@ -78,8 +78,8 @@ namespace _Scripts.Units {
         private void CreateLineRenderer() {
             _lineRenderer = gameObject.AddComponent<LineRenderer>();
             _lineRenderer.positionCount = 2;
-            _lineRenderer.startWidth = 0.035f;
-            _lineRenderer.endWidth = 0.01f;
+            _lineRenderer.startWidth = 0.07f;
+            _lineRenderer.endWidth = 0.025f;
             _lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
             _lineRenderer.startColor = Color.yellow;
             _lineRenderer.endColor = Color.white;
@@ -115,7 +115,7 @@ namespace _Scripts.Units {
             var targetPosition = _target.transform.position;
             var direction = (targetPosition - transform.position).normalized;
             _lineRenderer.SetPosition(0, transform.position);
-            _lineRenderer.SetPosition(1, transform.position - direction * 0.25f);
+            _lineRenderer.SetPosition(1, transform.position - direction * 0.45f);
         }
 
         /// <summary>

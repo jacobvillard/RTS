@@ -40,10 +40,19 @@ namespace _Scripts.Units {
         [SerializeField]private float attackRange = 1f;             // The attack range of the unit
         [SerializeField]private float attackDamage = 20;            // The attack damage to the unit
         [SerializeField]private float attackCooldown = 1f;          // The attack cooldown of the unit
+        [SerializeField] private float angularDrag = 8f;            // How quickly collision spin settles after impact
+        [Header("AI Response")]
+        [SerializeField] private float aiAssistCallRadius = 3f;     // Distance used by AI units to call nearby allies for help
+        [SerializeField] private float aiMusketPathRangeMultiplier = 1.25f; // How much longer than musket range an AI path can be before retreating
+        [SerializeField] private float aiMusketRetreatPadding = 2f; // Extra distance AI tries to add when retreating from muskets
         private float _attackTimer;                                 // Timer for attack cooldown
         private Unit _currentTarget;                                // The current target unit
         public Vector2 destination;                                 // The destination of the unit
         public bool IsAlive => health > 0;                          // Is the unit alive?
+        public UnitType ClassType => unitType;                      // The unit class used by UI and combat rules
+        public float CurrentHealth => Mathf.Max(health, 0f);        // Current health clamped for UI display
+        public float CalculatedMoveSpeed => moveSpeed * _currentSpeedMultiplier; // Current speed after terrain modifiers
+        public float AttackRange => attackRange;                    // Attack range exposed for AI response checks
         [SerializeField] private SpriteRenderer spriteRenderer;     // Main sprite renderer
         [SerializeField] private SpriteRenderer childSpriteRenderer;// Child sprite renderer 
         private NavMeshAgent _agent;                                // The NavMeshAgent component of the unit
@@ -57,6 +66,7 @@ namespace _Scripts.Units {
         private readonly List<MapTerrainZone> _activeForestZones = new();
         private const float MinimumStoppingDistance = 0.55f;
         private float _currentSpeedMultiplier = 1f;
+        private bool _isFollowingManualMoveCommand;                // True while obeying a player-issued movement command
         public bool IsInForest => _activeForestZones.Count > 0;
         
         
@@ -77,6 +87,7 @@ namespace _Scripts.Units {
 
             _rigidbody2D.bodyType = RigidbodyType2D.Dynamic;
             _rigidbody2D.gravityScale = 0f;
+            _rigidbody2D.angularDrag = angularDrag;
             _rigidbody2D.velocity = Vector2.zero;
             _rigidbody2D.angularVelocity = 0f;
         }
@@ -116,6 +127,9 @@ namespace _Scripts.Units {
                 ? type.attackDamage * 0.99f 
                 : type.attackDamage;
             attackCooldown = type.attackCooldown;
+            aiAssistCallRadius = type.aiAssistCallRadius;
+            aiMusketPathRangeMultiplier = type.aiMusketPathRangeMultiplier;
+            aiMusketRetreatPadding = type.aiMusketRetreatPadding;
             this.team = teamInit;
             UpdateStoppingDistance();
         }
@@ -222,6 +236,8 @@ namespace _Scripts.Units {
         /// Advances the unit towards the hold position.
         /// </summary>
         private void Hold() {
+            _isFollowingManualMoveCommand = false;
+            UpdateStoppingDistance();
             _agent.SetDestination(_holdPosition);
         }
 
@@ -229,6 +245,11 @@ namespace _Scripts.Units {
         /// Advances the unit towards the target position.
         /// </summary>
         private void Advance() {
+            if (_isFollowingManualMoveCommand && HasReachedManualDestination()) {
+                _isFollowingManualMoveCommand = false;
+                UpdateStoppingDistance();
+            }
+
             MoveTowards(destination);
         }
         
@@ -245,6 +266,11 @@ namespace _Scripts.Units {
         /// Advances the unit towards the closest target.
         /// </summary>
         private void Charge() {
+            if (_isFollowingManualMoveCommand) {
+                _isFollowingManualMoveCommand = false;
+                UpdateStoppingDistance();
+            }
+
             if (_currentTarget != null && _currentTarget.IsAlive) {
                 MoveTowards(_currentTarget.transform.position);
             }
@@ -396,15 +422,20 @@ namespace _Scripts.Units {
             //Check if the target position is on the NavMesh
             // ReSharper disable once NotAccessedOutParameterVariable
             NavMeshHit hit; 
-            var cross = Instantiate(_targetPosCrossPrefab, targetPosition, Quaternion.identity);
+            var crossPosition = new Vector3(targetPosition.x, targetPosition.y, -0.1f);
+            var cross = Instantiate(_targetPosCrossPrefab, crossPosition, Quaternion.identity);
             var crossSpriteRenderer = cross.GetComponent<SpriteRenderer>();
             if (NavMesh.SamplePosition(targetPosition, out hit, 0.1f, 1 << NavMesh.GetAreaFromName("Walkable"))) {
                 destination = targetPosition;                   // Set the destination
+                _isFollowingManualMoveCommand = true;
+                UpdateStoppingDistance();
+                AudioManager.Instance?.PlayMoveOrder(crossPosition);
                 SetState(UnitState.Advance);                    // Change state to "Advance"
                 BattleController.Instance.ClearSelectedUnit();  // Clear the selected unit
             }
             else {
                 Debug.LogWarning("Invalid destination: " + targetPosition);
+                AudioManager.Instance?.PlayBadUnitPosition(crossPosition);
                 crossSpriteRenderer.color = Color.red;        // Set the cross's color to red
             }
             
@@ -472,9 +503,22 @@ namespace _Scripts.Units {
         private void UpdateStoppingDistance() {
             if (_agent == null) return;
 
+            if (_isFollowingManualMoveCommand) {
+                _agent.stoppingDistance = MinimumStoppingDistance;
+                return;
+            }
+
             _agent.stoppingDistance = unitType == UnitType.Ranged
                 ? Mathf.Max(MinimumStoppingDistance, attackRange * 0.8f)
                 : Mathf.Max(MinimumStoppingDistance, attackRange * 0.7f);
+        }
+
+        /// <summary>
+        /// Checks whether a player-issued move order has reached its destination.
+        /// </summary>
+        /// <returns>True when the unit is close enough to the ordered point.</returns>
+        private bool HasReachedManualDestination() {
+            return Vector2.Distance(transform.position, destination) <= MinimumStoppingDistance;
         }
 
 
@@ -492,6 +536,143 @@ namespace _Scripts.Units {
             }
         }
         
+        #endregion
+        #region AI Response
+
+        /// <summary>
+        /// Handles AI reactions after this unit has been attacked.
+        /// </summary>
+        /// <param name="attacker">The unit that caused the damage.</param>
+        private void HandleAiAttackResponse(Unit attacker) {
+            if (team != Team.AI || attacker == null || !attacker.IsAlive) return;
+
+            AudioManager.Instance?.PlayAiAlert(transform.position, this);
+            CallNearbyAiUnits(attacker);
+
+            if (attacker.ClassType == UnitType.Ranged) {
+                RespondToMusketAttack(attacker);
+                return;
+            }
+
+            TryAttackSpecificUnit(attacker);
+        }
+
+        /// <summary>
+        /// Asks nearby AI allies to help against the attacker.
+        /// </summary>
+        /// <param name="attacker">The unit that damaged this AI unit.</param>
+        private void CallNearbyAiUnits(Unit attacker) {
+            if (BattleController.Instance == null) return;
+
+            var friendlyUnits = BattleController.Instance.GetFriendlyUnits(team);
+            foreach (var friendlyUnit in friendlyUnits) {
+                if (friendlyUnit == null || friendlyUnit == this || !friendlyUnit.IsAlive) continue;
+                if (Vector2.Distance(transform.position, friendlyUnit.transform.position) > aiAssistCallRadius) continue;
+
+                friendlyUnit.TryAttackSpecificUnit(attacker);
+            }
+        }
+
+        /// <summary>
+        /// Decides whether an AI unit should charge or retreat after being shot by a musket.
+        /// </summary>
+        /// <param name="attacker">The musket unit that fired.</param>
+        private void RespondToMusketAttack(Unit attacker) {
+            if (IsFightingDifferentUnit(attacker)) return;
+
+            if (CanReachMusketWithoutLongPath(attacker)) {
+                TryAttackSpecificUnit(attacker);
+                return;
+            }
+
+            RetreatFromMusket(attacker);
+        }
+
+        /// <summary>
+        /// Forces this unit to focus a known attacker when it is not already fighting someone else.
+        /// </summary>
+        /// <param name="attacker">The unit to attack.</param>
+        private void TryAttackSpecificUnit(Unit attacker) {
+            if (attacker == null || !attacker.IsAlive) return;
+            if (IsFightingDifferentUnit(attacker)) return;
+
+            _currentTarget = attacker;
+            if (!targetUnits.Contains(attacker)) {
+                targetUnits.Add(attacker);
+            }
+
+            _isFollowingManualMoveCommand = false;
+            UpdateStoppingDistance();
+            SetState(UnitState.Charge);
+        }
+
+        /// <summary>
+        /// Checks if this unit is already actively fighting another living unit.
+        /// </summary>
+        /// <param name="attacker">The attacker asking for a response.</param>
+        /// <returns>True when a different target should keep priority.</returns>
+        private bool IsFightingDifferentUnit(Unit attacker) {
+            return _currentTarget != null &&
+                   _currentTarget != attacker &&
+                   _currentTarget.IsAlive &&
+                   Vector2.Distance(transform.position, _currentTarget.transform.position) <= attackRange;
+        }
+
+        /// <summary>
+        /// Checks whether the NavMesh path to a musket attacker is close enough to charge.
+        /// </summary>
+        /// <param name="attacker">The musket attacker.</param>
+        /// <returns>True when the path is short enough to fight back.</returns>
+        private bool CanReachMusketWithoutLongPath(Unit attacker) {
+            if (_agent == null) return false;
+
+            var path = new NavMeshPath();
+            if (!_agent.CalculatePath(attacker.transform.position, path)) return false;
+            if (path.status != NavMeshPathStatus.PathComplete) return false;
+
+            return GetPathLength(path) <= attacker.AttackRange * aiMusketPathRangeMultiplier;
+        }
+
+        /// <summary>
+        /// Calculates the distance along a NavMesh path.
+        /// </summary>
+        /// <param name="path">The path to measure.</param>
+        /// <returns>The total corner-to-corner path length.</returns>
+        private static float GetPathLength(NavMeshPath path) {
+            if (path == null || path.corners.Length < 2) return 0f;
+
+            var length = 0f;
+            for (var i = 1; i < path.corners.Length; i++) {
+                length += Vector3.Distance(path.corners[i - 1], path.corners[i]);
+            }
+
+            return length;
+        }
+
+        /// <summary>
+        /// Moves away from a musket attacker until this unit should be outside their attack range.
+        /// </summary>
+        /// <param name="attacker">The musket attacker to retreat from.</param>
+        private void RetreatFromMusket(Unit attacker) {
+            if (_agent == null) return;
+
+            var awayDirection = ((Vector2)transform.position - (Vector2)attacker.transform.position).normalized;
+            if (awayDirection == Vector2.zero) {
+                awayDirection = Vector2.right;
+            }
+
+            var currentDistance = Vector2.Distance(transform.position, attacker.transform.position);
+            var retreatDistance = Mathf.Max(aiMusketRetreatPadding, attacker.AttackRange - currentDistance + aiMusketRetreatPadding);
+            var retreatPosition = (Vector2)transform.position + awayDirection * retreatDistance;
+
+            if (NavMesh.SamplePosition(retreatPosition, out var hit, retreatDistance, NavMesh.AllAreas)) {
+                destination = hit.position;
+                _isFollowingManualMoveCommand = false;
+                UpdateStoppingDistance();
+                SetState(UnitState.Advance);
+            }
+        }
+
         #endregion
         #region Damage and Death
         
@@ -522,6 +703,11 @@ namespace _Scripts.Units {
         }
 
         private void FireMusketAtClosestTarget() {
+            if (team == Team.Player && IsInForest) {
+                LogTargeting("musket did not fire: player ranged unit is inside forest.");
+                return;
+            }
+
             UpdateCurrentTarget();
             if (_currentTarget == null || !IsValidTarget(_currentTarget)) {
                 LogTargeting("musket did not fire: no valid current target.");
@@ -529,18 +715,21 @@ namespace _Scripts.Units {
             }
 
             LogTargeting($"musket firing at '{_currentTarget.name}'.");
+            AudioManager.Instance?.PlayMusketShot(transform.position, this);
             MusketProjectile.Spawn(this, _currentTarget, CalculateDamage(_currentTarget), arrowSpeed);
         }
 
         public void ApplyProjectileDamage(Unit shooter, float damage) {
             if (shooter == null || !IsAlive) return;
-            TakeDamage(damage);
+            TakeDamage(damage, shooter);
         }
         
         private void DamageUnit(Unit target) {
-            LogTargeting($"damaging '{target.name}' for {CalculateDamage(target):0.00}.");
+            var damage = CalculateDamage(target);
+            LogTargeting($"damaging '{target.name}' for {damage:0.00}.");
+            AudioManager.Instance?.PlayMeleeHit(target.transform.position, unitType, this);
             //Deal damage
-            target.TakeDamage(CalculateDamage(target));
+            target.TakeDamage(damage, this);
                     
             //If the target is still in range, charge
             if (Vector2.Distance(_agent.destination, transform.position) <= attackRange) {
@@ -552,9 +741,15 @@ namespace _Scripts.Units {
         /// Takes damage from an enemy unit.
         /// </summary>
         /// <param name="amount"></param>
-        private void TakeDamage(float amount) {
+        /// <param name="attacker">The unit that caused the damage.</param>
+        private void TakeDamage(float amount, Unit attacker = null) {
             health -= amount;           // Reduce health
-            if (health <= 0) FadeOutAndDestroy(); // Check for death
+            if (health <= 0) {
+                FadeOutAndDestroy(); // Check for death
+                return;
+            }
+
+            HandleAiAttackResponse(attacker);
         }
         
         /// <summary>
@@ -562,6 +757,9 @@ namespace _Scripts.Units {
         /// </summary>
         private void FadeOutAndDestroy(float duration = 1f) {
             BattleController.Instance.RemoveUnit(this);
+            AudioManager.Instance?.StopSoundsForOwner(this);
+            AudioManager.Instance?.StopSoundsNear(transform.position, 1.5f);
+            AudioManager.Instance?.PlayUnitDeath(transform.position, unitType);
             StartCoroutine(FadeOutCoroutine(duration));
         }   
         

@@ -34,6 +34,7 @@ namespace _Scripts.Units {
 
             SetSprite(unit != null ? unit.icon : null);
             SetTeamLayer();
+            SetTeamEmblem();
             AddUnit(newUnit);
             Destroy(this);
         }
@@ -91,6 +92,16 @@ namespace _Scripts.Units {
             }
             else {
                 Debug.LogError("No spriteRenderer found for unit: " + (unit != null ? unit.name : name));
+            }
+        }
+
+        /// <summary>
+        /// Updates an optional team emblem child when the prefab has one.
+        /// </summary>
+        private void SetTeamEmblem() {
+            var emblemDisplay = GetComponentInChildren<TeamEmblemDisplay>();
+            if (emblemDisplay != null) {
+                emblemDisplay.SetTeam(team);
             }
         }
         

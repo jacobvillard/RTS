@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using _Scripts.GameManagement;
 
 /// <summary>
 /// Controls pause/play/speed buttons and applies the selected time scale.
@@ -57,6 +58,7 @@ public class TimeScaleButtonController : MonoBehaviour {
     public void TrySetTimeMode(TimeMode mode) {
         if (GameManager.Instance != null && GameManager.Instance.GameState == GameState.PreGame) return;
 
+        AudioManager.Instance?.PlayDefaultButtonSound();
         ApplyTimeMode(mode);
     }
 

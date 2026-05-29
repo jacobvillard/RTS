@@ -86,6 +86,8 @@ public class GameManager : Singleton<GameManager> {
     /// </summary>
     public void EndGame() {
         SetGameState(GameState.GameOver);
+        AudioManager.Instance?.StopMusic();
+        AudioManager.Instance?.PlayRoundEnd();
         StopEndGameDelay();
         _endGameCoroutine = StartCoroutine(PauseAfterEndGameDelay());
     }

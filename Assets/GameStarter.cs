@@ -1,3 +1,4 @@
+using _Scripts.GameManagement;
 using UnityEngine;
 
 /// <summary>
@@ -24,6 +25,8 @@ public class GameStarter : MonoBehaviour {
         }
 
         GameManager.Instance.StartGame();
+        AudioManager.Instance?.PlayRoundStart();
+        AudioManager.Instance?.PlayRandomRoundMusic();
 
         if (preGameUI != null) {
             preGameUI.SetActive(false);

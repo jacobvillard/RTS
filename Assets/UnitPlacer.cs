@@ -82,6 +82,8 @@ public class UnitPlacer : MonoBehaviour {
     /// </summary>
     /// <param name="unitType">The unit type name sent by the UI button.</param>
     public void SetSelectedUnitType(string unitType) {
+        AudioManager.Instance?.PlayDefaultButtonSound();
+
         switch (unitType) {
             case "Infantry":
                 _selectedUnitType = SelectedUnitType.Infantry;
@@ -105,6 +107,8 @@ public class UnitPlacer : MonoBehaviour {
     /// Removes all setup-placed units and resets the placement budget.
     /// </summary>
     public void ClearUnits() {
+        AudioManager.Instance?.PlayClearUnits();
+
         foreach (var unit in placedUnits) {
             if (unit != null) {
                 Destroy(unit);
@@ -256,21 +260,25 @@ public class UnitPlacer : MonoBehaviour {
 
         if (_money < unitCost) {
             Debug.Log("Not enough money to place unit.");
+            AudioManager.Instance?.PlayPlacementFailed();
             UpdateUnitCostText();
             return;
         }
 
         if (!IsPositionPlaceable(position)) {
+            AudioManager.Instance?.PlayPlacementFailed();
             LogPlaceableLayerMiss(position);
             return;
         }
 
         if (IsPositionOccupied(position)) {
             Debug.Log("That placement cell is already occupied.");
+            AudioManager.Instance?.PlayPlacementFailed();
             return;
         }
 
         var newUnit = Instantiate(unitPrefab, position, Quaternion.identity);
+        AudioManager.Instance?.PlayPlaceUnit(position);
         placedUnits.Add(newUnit);
 
         _money -= unitCost;

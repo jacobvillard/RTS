@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4267335715707246890}
   - component: {fileID: 2586343152089250615}
   - component: {fileID: 4191237258526677231}
+  - component: {fileID: -4990386200587375818}
   m_Layer: 7
   m_Name: PL_Infantry
   m_TagString: Untagged
@@ -179,9 +180,9 @@ MonoBehaviour:
   team: 1
   spriteRenderer: {fileID: 1317125943708126151}
   spriteRendererUnitType: {fileID: 6261790397679027194}
-  targetPosCrossPrefab: {fileID: 1241001317311767392, guid: 423c5ac3ad737974dbf802b8da687a4a, type: 3}
   playerColor: {r: 0, g: 0.78823537, b: 1, a: 1}
   aiColor: {r: 0.94117653, g: 0, b: 0, a: 1}
+  targetPosCrossPrefab: {fileID: 1241001317311767392, guid: 423c5ac3ad737974dbf802b8da687a4a, type: 3}
 --- !u!195 &4191237258526677231
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -204,6 +205,21 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &-4990386200587375818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2453431580732350478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e987ad308f14656af7be5ac9aec9704, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  team: 1
+  useParentUnitTeam: 1
+  emblemRenderer: {fileID: 3604321524705136066}
 --- !u!1 &3130484464950102965
 GameObject:
   m_ObjectHideFlags: 0
@@ -220,7 +236,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2988313396650849078
 Transform:
   m_ObjectHideFlags: 0

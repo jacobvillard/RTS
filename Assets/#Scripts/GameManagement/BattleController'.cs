@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using _Scripts.Units;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Unit = _Scripts.Units.Unit;
 
 namespace _Scripts.GameManagement {
@@ -132,6 +133,15 @@ namespace _Scripts.GameManagement {
         }
 
         /// <summary>
+        /// Gets all registered friendly units for a team.
+        /// </summary>
+        /// <param name="team">The team being queried.</param>
+        /// <returns>The friendly team list.</returns>
+        public List<Unit> GetFriendlyUnits(Team team) {
+            return team == Team.Player ? _teamPlayerUnits : _teamAIUnits;
+        }
+
+        /// <summary>
         /// Finds the closest living unit from a candidate list.
         /// </summary>
         /// <param name="source">The source unit.</param>
@@ -224,6 +234,7 @@ namespace _Scripts.GameManagement {
             }
 #else
             if (!Input.GetMouseButtonDown(0)) return;
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
             if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) return;
             if (SelectedUnit == null || !SelectedUnit.IsAlive) return;
 

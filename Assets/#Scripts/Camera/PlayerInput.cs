@@ -1,6 +1,7 @@
 using _Scripts.GameManagement;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.EventSystems;
 
 namespace _Scripts.Camera {
     /// <summary>
@@ -18,6 +19,7 @@ namespace _Scripts.Camera {
 
         private void Update() {
             if (!Input.GetMouseButtonDown(0)) return;
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
             TryMoveSelectedUnit();
         }
