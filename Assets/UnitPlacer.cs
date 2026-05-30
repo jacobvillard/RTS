@@ -52,6 +52,7 @@ public class UnitPlacer : MonoBehaviour {
 
     private int _money;                         // Current placement money.
     private int _placedUnitsCost;               // Total cost of placed units.
+    private Vector2 _currentPointerScreenPosition; // Pointer position approved for this placement frame.
     private SelectedUnitType _selectedUnitType = SelectedUnitType.None; // Unit selected for placement.
 
     public int placedUnitsCount => placedUnits.Count;
@@ -158,11 +159,30 @@ public class UnitPlacer : MonoBehaviour {
     /// </summary>
     /// <returns>True when placement input should be handled.</returns>
     private bool CanHandlePlacementInput() {
-        if (!Input.GetMouseButtonDown(0)) return false;
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return false;
         if (GameManager.Instance != null && !GameManager.Instance.IsPreGame()) return false;
 
+#if UNITY_EDITOR || UNITY_STANDALONE
+        if (!Input.GetMouseButtonDown(0)) return false;
+        if (IsPointerOverUi()) return false;
+
+        _currentPointerScreenPosition = Input.mousePosition;
         return true;
+#elif UNITY_ANDROID || UNITY_IOS
+        if (Input.touchCount <= 0) return false;
+
+        var touch = Input.GetTouch(0);
+        if (touch.phase != TouchPhase.Began) return false;
+        if (IsPointerOverUi(touch.fingerId)) return false;
+
+        _currentPointerScreenPosition = touch.position;
+        return true;
+#else
+        if (!Input.GetMouseButtonDown(0)) return false;
+        if (IsPointerOverUi()) return false;
+
+        _currentPointerScreenPosition = Input.mousePosition;
+        return true;
+#endif
     }
 
     /// <summary>
@@ -172,7 +192,7 @@ public class UnitPlacer : MonoBehaviour {
         var mainCamera = Camera.main;
         if (mainCamera == null) return;
 
-        var worldPosition = GetMouseWorldPosition(mainCamera);
+        var worldPosition = GetPointerWorldPosition(mainCamera, _currentPointerScreenPosition);
         PlaceUnit(SnapToGrid(worldPosition));
     }
 
@@ -184,7 +204,7 @@ public class UnitPlacer : MonoBehaviour {
         var mainCamera = Camera.main;
         if (mainCamera == null) return false;
 
-        var worldPosition = GetMouseWorldPosition(mainCamera);
+        var worldPosition = GetPointerWorldPosition(mainCamera, _currentPointerScreenPosition);
         var hits = Physics2D.OverlapPointAll(worldPosition);
 
         foreach (var hit in hits) {
@@ -199,17 +219,30 @@ public class UnitPlacer : MonoBehaviour {
     }
 
     /// <summary>
-    /// Converts the current mouse position into a 2D world position.
+    /// Converts the current pointer position into a 2D world position.
     /// </summary>
-    /// <param name="mainCamera">The camera used to project the mouse position.</param>
-    /// <returns>The mouse position in world space.</returns>
-    private static Vector3 GetMouseWorldPosition(Camera mainCamera) {
-        var mousePosition = Input.mousePosition;
-        mousePosition.z = -mainCamera.transform.position.z;
+    /// <param name="mainCamera">The camera used to project the pointer position.</param>
+    /// <param name="screenPosition">The pointer position on screen.</param>
+    /// <returns>The pointer position in world space.</returns>
+    private static Vector3 GetPointerWorldPosition(Camera mainCamera, Vector2 screenPosition) {
+        var pointerPosition = new Vector3(screenPosition.x, screenPosition.y, -mainCamera.transform.position.z);
 
-        var worldPosition = mainCamera.ScreenToWorldPoint(mousePosition);
+        var worldPosition = mainCamera.ScreenToWorldPoint(pointerPosition);
         worldPosition.z = 0f;
         return worldPosition;
+    }
+
+    /// <summary>
+    /// Checks whether the pointer began over a UI element.
+    /// </summary>
+    /// <param name="pointerId">The touch pointer id, or -1 for mouse.</param>
+    /// <returns>True when the pointer is over Unity UI.</returns>
+    private static bool IsPointerOverUi(int pointerId = -1) {
+        if (EventSystem.current == null) return false;
+
+        return pointerId >= 0
+            ? EventSystem.current.IsPointerOverGameObject(pointerId)
+            : EventSystem.current.IsPointerOverGameObject();
     }
 
     #endregion
