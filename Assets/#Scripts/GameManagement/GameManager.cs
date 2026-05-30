@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using _Scripts.GameManagement;
 using UnityEngine;
 
@@ -21,14 +23,22 @@ public class GameManager : Singleton<GameManager> {
     #region Variables
 
     [Header("Game State")]
-    [SerializeField] private GameState gameState = GameState.PreGame; // Current game phase.
-    [SerializeField] private float endGameDelaySeconds = 10f;         // Delay before pausing after battle end.
+    [SerializeField] private GameState gameState = GameState.PreGame;               // Current game phase.
+    [SerializeField] private float endGameDelaySeconds = 10f;                       // Delay before pausing after battle end.
 
     [Header("Scene References")]
-    [SerializeField] private BoxCollider2D unitPlacementArea;                 // Placement area collider disabled at battle start.
-    [SerializeField] private TimeScaleButtonController timeScaleButtonController; // Time controls synced to state changes.
+    [SerializeField] private BoxCollider2D unitPlacementArea;                       // Placement area collider disabled at battle start.
+    [SerializeField] private TimeScaleButtonController timeScaleButtonController;   // Time controls synced to state changes.
 
-    private Coroutine _endGameCoroutine; // Active delayed end-game pause coroutine.
+    [Header("End Game UI")]
+    [SerializeField] private GameObject postGameUI;                                 // UI shown after the battle ends.
+    [SerializeField] private GameObject wonBtn;                                     // Button shown when the player wins.
+    [SerializeField] private GameObject lostBtn;                                    // Button shown when the player loses.
+
+    [Header("Pre-Game Placement")]
+    [SerializeField] private List<GameObject> placeableAreas = new();               // Colliders that should be enabled during pre-game placement.
+
+    private Coroutine _endGameCoroutine;                                            // Active delayed end-game pause coroutine.
 
     public GameState GameState => gameState;
     public LevelStats LevelStats { get; private set; }
@@ -44,7 +54,6 @@ public class GameManager : Singleton<GameManager> {
             return;
         }
 
-        DontDestroyOnLoad(gameObject);
         LevelStats = GetComponent<LevelStats>();
     }
 
@@ -70,6 +79,10 @@ public class GameManager : Singleton<GameManager> {
         if (unitPlacementArea != null) {
             unitPlacementArea.enabled = false;
         }
+
+        foreach (var area in placeableAreas.Where(area => area != null)) {
+            area.SetActive(false);
+        }
     }
 
     /// <summary>
@@ -90,6 +103,7 @@ public class GameManager : Singleton<GameManager> {
         AudioManager.Instance?.PlayRoundEnd();
         StopEndGameDelay();
         _endGameCoroutine = StartCoroutine(PauseAfterEndGameDelay());
+        
     }
 
     /// <summary>
@@ -98,6 +112,16 @@ public class GameManager : Singleton<GameManager> {
     /// <returns>True when the game is in pre-game.</returns>
     public bool IsPreGame() {
         return gameState == GameState.PreGame;
+    }
+
+    /// <summary>
+    /// Quits the application. Note that this will not have an effect in the editor or WebGL builds.
+    /// </summary>
+    public void QuitApplication() {
+        Application.Quit();
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
 
     #endregion
@@ -110,6 +134,17 @@ public class GameManager : Singleton<GameManager> {
         yield return new WaitForSecondsRealtime(endGameDelaySeconds);
 
         SetTimeMode(TimeScaleButtonController.TimeMode.Pause);
+        postGameUI?.SetActive(true);
+        if(BattleController.Instance != null) {
+            if(BattleController.Instance.winningTeam == "Player") {
+                wonBtn?.SetActive(true);
+                lostBtn?.SetActive(false);
+            }
+            else {
+                wonBtn?.SetActive(false);
+                lostBtn?.SetActive(true);
+            }
+        }
         _endGameCoroutine = null;
     }
 

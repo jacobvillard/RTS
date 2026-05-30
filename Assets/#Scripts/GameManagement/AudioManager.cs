@@ -1,6 +1,8 @@
 using UnityEngine;
 using _Scripts.Units;
 using System.Collections.Generic;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
 namespace _Scripts.GameManagement {
     /// <summary>
@@ -37,6 +39,20 @@ namespace _Scripts.GameManagement {
         [SerializeField, Range(0f, 1f)] private float sfxVolume = 0.8f;  // Volume for non-music sound effects.
         [SerializeField, Range(0f, 1f)] private float musicVolume = 0.7f; // Volume for music playback.
         [SerializeField, Range(0f, 1f)] private float battleVolume = 0.3f; // Extra multiplier for battle/combat cues.
+        [SerializeField] private AudioVolumeMultipliers volumeMultipliers; // User-controlled volume multiplier asset.
+
+        [Header("Multiplier Range")]
+        [SerializeField] private float minimumOutputMultiplier = 0f; // Output volume when a slider is at 0.
+        [SerializeField] private float maximumOutputMultiplier = 2f; // Output volume when a slider is at 1.
+
+        [Header("Volume Sliders")]
+        [SerializeField] private Slider mainVolumeSlider;  // Slider that writes to the master multiplier.
+        [SerializeField] private Slider uiVolumeSlider;    // Slider that writes to the UI multiplier.
+        [SerializeField] private Slider sfxVolumeSlider;   // Slider that writes to the SFX multiplier.
+        [SerializeField] private Slider musicVolumeSlider; // Slider that writes to the music multiplier.
+
+        [Header("Volume Events")]
+        [SerializeField] private UnityEvent audioSlidersUpdated; // Invoked after sliders are refreshed from the asset.
 
         [Header("3D Audio")]
         [SerializeField, Range(0f, 1f)] private float spatialBlend = 1f; // 1 is fully 3D.
@@ -53,6 +69,10 @@ namespace _Scripts.GameManagement {
         [SerializeField] private AudioSource musicAudioSource; // Optional source used for music.
 
         private readonly List<OwnedAudio> _ownedAudio = new(); // Active sounds associated with scene components.
+        private UnityAction<float> _mainVolumeSliderChanged;    // Cached slider listener.
+        private UnityAction<float> _uiVolumeSliderChanged;      // Cached slider listener.
+        private UnityAction<float> _sfxVolumeSliderChanged;     // Cached slider listener.
+        private UnityAction<float> _musicVolumeSliderChanged;   // Cached slider listener.
 
         #endregion
         #region Types
@@ -74,13 +94,18 @@ namespace _Scripts.GameManagement {
                 return;
             }
 
-            DontDestroyOnLoad(gameObject);
+            AddVolumeSliderListeners();
             EnsureUiSource();
             EnsureMusicSource();
 
             if (playMusicOnAwake) {
                 PlayMusic();
             }
+        }
+
+        protected override void OnDestroy() {
+            base.OnDestroy();
+            RemoveVolumeSliderListeners();
         }
 
         #endregion
@@ -152,6 +177,20 @@ namespace _Scripts.GameManagement {
             if (roundMusicClip == null) return;
 
             PlayMusicClip(roundMusicClip);
+        }
+
+        /// <summary>
+        /// Updates volume sliders from the assigned multiplier asset.
+        /// </summary>
+        public void UpdateSlidersFromVolumeMultipliers() {
+            if (volumeMultipliers == null) return;
+
+            SetSliderValueWithoutNotify(mainVolumeSlider, volumeMultipliers.MainVolumeMultiplier);
+            SetSliderValueWithoutNotify(uiVolumeSlider, volumeMultipliers.UiVolumeMultiplier);
+            SetSliderValueWithoutNotify(sfxVolumeSlider, volumeMultipliers.SfxVolumeMultiplier);
+            SetSliderValueWithoutNotify(musicVolumeSlider, volumeMultipliers.MusicVolumeMultiplier);
+            ApplyMusicVolume();
+            audioSlidersUpdated?.Invoke();
         }
 
         #endregion
@@ -309,6 +348,98 @@ namespace _Scripts.GameManagement {
         }
 
         #endregion
+        #region Volume Sliders
+
+        /// <summary>
+        /// Connects assigned UI sliders to the multiplier asset.
+        /// </summary>
+        private void AddVolumeSliderListeners() {
+            _mainVolumeSliderChanged = SetMainVolumeMultiplier;
+            _uiVolumeSliderChanged = SetUiVolumeMultiplier;
+            _sfxVolumeSliderChanged = SetSfxVolumeMultiplier;
+            _musicVolumeSliderChanged = SetMusicVolumeMultiplier;
+
+            if (mainVolumeSlider != null) mainVolumeSlider.onValueChanged.AddListener(_mainVolumeSliderChanged);
+            if (uiVolumeSlider != null) uiVolumeSlider.onValueChanged.AddListener(_uiVolumeSliderChanged);
+            if (sfxVolumeSlider != null) sfxVolumeSlider.onValueChanged.AddListener(_sfxVolumeSliderChanged);
+            if (musicVolumeSlider != null) musicVolumeSlider.onValueChanged.AddListener(_musicVolumeSliderChanged);
+        }
+
+        /// <summary>
+        /// Removes slider listeners owned by this manager.
+        /// </summary>
+        private void RemoveVolumeSliderListeners() {
+            if (mainVolumeSlider != null && _mainVolumeSliderChanged != null) {
+                mainVolumeSlider.onValueChanged.RemoveListener(_mainVolumeSliderChanged);
+            }
+
+            if (uiVolumeSlider != null && _uiVolumeSliderChanged != null) {
+                uiVolumeSlider.onValueChanged.RemoveListener(_uiVolumeSliderChanged);
+            }
+
+            if (sfxVolumeSlider != null && _sfxVolumeSliderChanged != null) {
+                sfxVolumeSlider.onValueChanged.RemoveListener(_sfxVolumeSliderChanged);
+            }
+
+            if (musicVolumeSlider != null && _musicVolumeSliderChanged != null) {
+                musicVolumeSlider.onValueChanged.RemoveListener(_musicVolumeSliderChanged);
+            }
+        }
+
+        /// <summary>
+        /// Writes a master volume slider value to the multiplier asset.
+        /// </summary>
+        /// <param name="value">The new multiplier.</param>
+        public void SetMainVolumeMultiplier(float value) {
+            if (volumeMultipliers == null) return;
+
+            volumeMultipliers.SetMainVolumeMultiplier(value);
+            ApplyMusicVolume();
+        }
+
+        /// <summary>
+        /// Writes a UI volume slider value to the multiplier asset.
+        /// </summary>
+        /// <param name="value">The new multiplier.</param>
+        public void SetUiVolumeMultiplier(float value) {
+            if (volumeMultipliers == null) return;
+
+            volumeMultipliers.SetUiVolumeMultiplier(value);
+        }
+
+        /// <summary>
+        /// Writes an SFX volume slider value to the multiplier asset.
+        /// </summary>
+        /// <param name="value">The new multiplier.</param>
+        public void SetSfxVolumeMultiplier(float value) {
+            if (volumeMultipliers == null) return;
+
+            volumeMultipliers.SetSfxVolumeMultiplier(value);
+        }
+
+        /// <summary>
+        /// Writes a music volume slider value to the multiplier asset.
+        /// </summary>
+        /// <param name="value">The new multiplier.</param>
+        public void SetMusicVolumeMultiplier(float value) {
+            if (volumeMultipliers == null) return;
+
+            volumeMultipliers.SetMusicVolumeMultiplier(value);
+            ApplyMusicVolume();
+        }
+
+        /// <summary>
+        /// Sets a slider value without triggering its listeners.
+        /// </summary>
+        /// <param name="slider">The slider to update.</param>
+        /// <param name="value">The value to apply.</param>
+        private static void SetSliderValueWithoutNotify(Slider slider, float value) {
+            if (slider != null) {
+                slider.SetValueWithoutNotify(value);
+            }
+        }
+
+        #endregion
         #region Playback
 
         /// <summary>
@@ -437,6 +568,15 @@ namespace _Scripts.GameManagement {
         }
 
         /// <summary>
+        /// Applies the current music volume to the music source.
+        /// </summary>
+        private void ApplyMusicVolume() {
+            if (musicAudioSource != null) {
+                musicAudioSource.volume = GetMusicVolume();
+            }
+        }
+
+        /// <summary>
         /// Stops an owned source immediately and destroys its object.
         /// </summary>
         /// <param name="ownedAudio">The owned audio to stop.</param>
@@ -468,7 +608,7 @@ namespace _Scripts.GameManagement {
         /// </summary>
         /// <returns>The final UI volume.</returns>
         private float GetUiVolume() {
-            return mainVolume * uiVolume;
+            return mainVolume * GetMainVolumeMultiplier() * uiVolume * GetUiVolumeMultiplier();
         }
 
         /// <summary>
@@ -476,7 +616,7 @@ namespace _Scripts.GameManagement {
         /// </summary>
         /// <returns>The final SFX volume.</returns>
         private float GetSfxVolume() {
-            return mainVolume * sfxVolume;
+            return mainVolume * GetMainVolumeMultiplier() * sfxVolume * GetSfxVolumeMultiplier();
         }
 
         /// <summary>
@@ -484,7 +624,7 @@ namespace _Scripts.GameManagement {
         /// </summary>
         /// <returns>The final battle volume.</returns>
         private float GetBattleVolume() {
-            return mainVolume * sfxVolume * battleVolume;
+            return mainVolume * GetMainVolumeMultiplier() * sfxVolume * GetSfxVolumeMultiplier() * battleVolume;
         }
 
         /// <summary>
@@ -492,7 +632,59 @@ namespace _Scripts.GameManagement {
         /// </summary>
         /// <returns>The final music volume.</returns>
         private float GetMusicVolume() {
-            return mainVolume * musicVolume;
+            return mainVolume * GetMainVolumeMultiplier() * musicVolume * GetMusicVolumeMultiplier();
+        }
+
+        /// <summary>
+        /// Gets the master multiplier or a neutral fallback.
+        /// </summary>
+        /// <returns>The master multiplier.</returns>
+        private float GetMainVolumeMultiplier() {
+            return volumeMultipliers != null
+                ? GetOutputMultiplier(volumeMultipliers.MainVolumeMultiplier)
+                : 1f;
+        }
+
+        /// <summary>
+        /// Gets the UI multiplier or a neutral fallback.
+        /// </summary>
+        /// <returns>The UI multiplier.</returns>
+        private float GetUiVolumeMultiplier() {
+            return volumeMultipliers != null
+                ? GetOutputMultiplier(volumeMultipliers.UiVolumeMultiplier)
+                : 1f;
+        }
+
+        /// <summary>
+        /// Gets the SFX multiplier or a neutral fallback.
+        /// </summary>
+        /// <returns>The SFX multiplier.</returns>
+        private float GetSfxVolumeMultiplier() {
+            return volumeMultipliers != null
+                ? GetOutputMultiplier(volumeMultipliers.SfxVolumeMultiplier)
+                : 1f;
+        }
+
+        /// <summary>
+        /// Gets the music multiplier or a neutral fallback.
+        /// </summary>
+        /// <returns>The music multiplier.</returns>
+        private float GetMusicVolumeMultiplier() {
+            return volumeMultipliers != null
+                ? GetOutputMultiplier(volumeMultipliers.MusicVolumeMultiplier)
+                : 1f;
+        }
+
+        /// <summary>
+        /// Converts a 0-1 slider value into the actual multiplier used for playback.
+        /// </summary>
+        /// <param name="normalizedValue">The ScriptableObject value.</param>
+        /// <returns>The playback multiplier.</returns>
+        private float GetOutputMultiplier(float normalizedValue) {
+            return Mathf.Lerp(
+                minimumOutputMultiplier,
+                maximumOutputMultiplier,
+                Mathf.Clamp01(normalizedValue));
         }
 
         #endregion

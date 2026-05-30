@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: Calvary
   m_EditorClassIdentifier: 
   unitType: 2
+  icon: {fileID: 21300000, guid: e6ad38299f44f6141abc3e8f78cc897a, type: 3}
   health: 100
   moveSpeed: 1
   attackRange: 1.2
-  attackDamage: 5
+  attackDamage: 10
   attackCooldown: 1
-  icon: {fileID: 21300000, guid: e6ad38299f44f6141abc3e8f78cc897a, type: 3}
+  aiAssistCallRadius: 3
+  aiMusketPathRangeMultiplier: 1.25
+  aiMusketRetreatPadding: 2

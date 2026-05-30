@@ -21,12 +21,14 @@ namespace _Scripts.Camera {
         private Vector3 _dragOrigin;             // Previous pointer position during drag.
         private UnityEngine.Camera _camera;      // Main camera being controlled.
         private float _actualDragSpeed;          // Drag speed adjusted by zoom level.
+        private float _baseDragSpeed;            // Original drag speed for reference.
 
         #endregion
         #region Unity Methods
 
         private void Start() {
             _camera = UnityEngine.Camera.main;
+            _baseDragSpeed = dragSpeed;
         }
 
         private void Update() {
@@ -39,6 +41,19 @@ namespace _Scripts.Camera {
 #endif
             ClampCameraPosition();
         }
+
+        #endregion
+
+        #region Public Methods
+
+        public void EnterOptions() {
+            dragSpeed = 0;
+        }
+        
+        public void ExitOptions() {
+            dragSpeed = _baseDragSpeed;
+        }
+        
 
         #endregion
         #region Drag

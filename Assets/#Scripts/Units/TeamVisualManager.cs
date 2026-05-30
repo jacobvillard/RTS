@@ -41,6 +41,12 @@ namespace _Scripts.Units {
             LoadSavedTeamImages();
         }
 
+        private void OnDestroy() {
+            if (Instance == this) {
+                Instance = null;
+            }
+        }
+
         #endregion
         #region Public Methods
 

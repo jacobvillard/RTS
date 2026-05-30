@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: Infantry
   m_EditorClassIdentifier: 
   unitType: 0
+  icon: {fileID: 21300000, guid: 6d44ac2faf3153e4ba802031e125c08b, type: 3}
   health: 100
-  moveSpeed: 0.5
+  moveSpeed: 0.65
   attackRange: 1.2
   attackDamage: 5
   attackCooldown: 1
-  icon: {fileID: 21300000, guid: 6d44ac2faf3153e4ba802031e125c08b, type: 3}
+  aiAssistCallRadius: 3
+  aiMusketPathRangeMultiplier: 1.25
+  aiMusketRetreatPadding: 2

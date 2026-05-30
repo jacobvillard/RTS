@@ -61,6 +61,14 @@ public class TimeScaleButtonController : MonoBehaviour {
         AudioManager.Instance?.PlayDefaultButtonSound();
         ApplyTimeMode(mode);
     }
+    
+    public void PauseGame() {
+        TrySetTimeMode(TimeMode.Pause);
+    }
+    
+    public void ResumeGame() {
+        TrySetTimeMode(TimeMode.Play);
+    }
 
     /// <summary>
     /// Applies the requested time mode immediately.

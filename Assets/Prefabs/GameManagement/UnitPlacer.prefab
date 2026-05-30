@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3488667456777208635
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6227245742237283848}
+  - component: {fileID: 4247676536660584752}
+  m_Layer: 0
+  m_Name: UnitPlacer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6227245742237283848
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3488667456777208635}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 531.1706, y: 260.95517, z: -1.7604}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4247676536660584752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3488667456777208635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4a16fa6b48a18b48a2f68ca6b0011e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelStats: {fileID: 0}
+  infantryUnitCost: 50
+  cavalryUnitCost: 100
+  musketUnitCost: 60
+  placeableLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  blockedByUnitLayers:
+    serializedVersion: 2
+    m_Bits: 245
+  placementGrid: {fileID: 0}
+  occupiedCheckRadius: 0.7
+  placedUnits: []
+  infantryUnitCostText: {fileID: 0}
+  cavalryUnitCostText: {fileID: 0}
+  musketUnitCostText: {fileID: 0}
+  affordableCostColour: {r: 1, g: 1, b: 1, a: 1}
+  unaffordableCostColour: {r: 1, g: 0, b: 0, a: 1}
+  infantryUnitButton: {fileID: 0}
+  cavalryUnitButton: {fileID: 0}
+  musketUnitButton: {fileID: 0}
+  selectedButtonColour: {r: 0.25, g: 0.55, b: 1, a: 1}
+  unselectedButtonColour: {r: 1, g: 1, b: 1, a: 1}
+  infantryUnitPrefab: {fileID: 2453431580732350478, guid: 15f097cb680db8747909c0f929c97be9, type: 3}
+  cavalryUnitPrefab: {fileID: 7166203271309519855, guid: 9e5ffe724de2e75498a5b0a16f58f980, type: 3}
+  musketUnitPrefab: {fileID: 1562853466630406267, guid: f503b50efec86e44ba0a415bf3310b64, type: 3}

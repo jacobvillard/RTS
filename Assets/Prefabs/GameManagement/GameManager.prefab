@@ -1,0 +1,106 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6906151237327259816
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4969050211786628301}
+  - component: {fileID: 5455101668441418374}
+  - component: {fileID: 4750251247905623507}
+  - component: {fileID: 8739605618422728692}
+  - component: {fileID: 5230108742728934180}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4969050211786628301
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6906151237327259816}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -9.675498, y: -6.000268, z: -0.10042224}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5455101668441418374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6906151237327259816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac4904246fda9d040bd166735c2b786a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameState: 0
+  endGameDelaySeconds: 1
+  unitPlacementArea: {fileID: 0}
+  timeScaleButtonController: {fileID: 0}
+  postGameUI: {fileID: 0}
+  wonBtn: {fileID: 0}
+  lostBtn: {fileID: 0}
+  placeableAreas: []
+--- !u!114 &4750251247905623507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6906151237327259816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cff8c98bd0ec42b4c8ac6a9aea0bfe36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startMoney: 220
+  moneyAmt: 0
+  moneyText: {fileID: 0}
+--- !u!114 &8739605618422728692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6906151237327259816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e98f4bca6cc4e24ab5ff21d7b38b1a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  statsParent: {fileID: 0}
+  classTypeText: {fileID: 0}
+  healthText: {fileID: 0}
+  speedText: {fileID: 0}
+  speedSampleInterval: 0.15
+  speedSmoothing: 10
+--- !u!114 &5230108742728934180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6906151237327259816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f0bcb04ed784ece96228510261ab931, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultPlayerSprite: {fileID: 0}
+  defaultAiSprite: {fileID: 0}
+  maxTextureSize: 256
+  pixelsPerUnit: 100

@@ -19,6 +19,7 @@ namespace _Scripts.GameManagement {
         private bool _battleStarted;                          // True once registered units have been released.
 
         public Unit SelectedUnit { get; private set; }
+        public string winningTeam; 
 
         #endregion
         #region Unity Methods
@@ -192,12 +193,15 @@ namespace _Scripts.GameManagement {
 
             if (!teamAAlive && teamBAlive) {
                 ResolveBattle($"Team B Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+                winningTeam = "AI";
             }
             else if (!teamBAlive && teamAAlive) {
                 ResolveBattle($"Team A Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+                winningTeam = "Player";
             }
             else if (!teamAAlive && !teamBAlive) {
                 ResolveBattle($"Draw or Both Defeated! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+                winningTeam = "Draw";
             }
         }
 
