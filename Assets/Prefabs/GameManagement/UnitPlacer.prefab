@@ -55,7 +55,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 245
   placementGrid: {fileID: 0}
-  occupiedCheckRadius: 0.7
+  occupiedCheckRadius: 0.5
+  tapMovementThreshold: 20
   placedUnits: []
   infantryUnitCostText: {fileID: 0}
   cavalryUnitCostText: {fileID: 0}

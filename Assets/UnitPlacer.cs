@@ -29,6 +29,7 @@ public class UnitPlacer : MonoBehaviour {
     [SerializeField] private LayerMask blockedByUnitLayers;     // Unit layers that block placement.
     [SerializeField] private Grid placementGrid;                // Optional grid used to snap placement.
     [SerializeField] private float occupiedCheckRadius = 0.35f; // Radius used to detect occupied spaces.
+    [SerializeField] private float tapMovementThreshold = 20f;  // Maximum screen movement still treated as a tap.
     [SerializeField] private List<GameObject> placedUnits = new(); // Units placed during setup.
 
     [Header("Cost Text")]
@@ -53,6 +54,8 @@ public class UnitPlacer : MonoBehaviour {
     private int _money;                         // Current placement money.
     private int _placedUnitsCost;               // Total cost of placed units.
     private Vector2 _currentPointerScreenPosition; // Pointer position approved for this placement frame.
+    private Vector2 _pointerStartScreenPosition; // Pointer position when the current tap began.
+    private bool _isPointerPressActive;         // True while waiting to decide if a press is a tap or drag.
     private SelectedUnitType _selectedUnitType = SelectedUnitType.None; // Unit selected for placement.
 
     public int placedUnitsCount => placedUnits.Count;
@@ -68,11 +71,11 @@ public class UnitPlacer : MonoBehaviour {
     }
 
     private void Update() {
-        if (!CanHandlePlacementInput()) return;
-        if (TrySelectPlacedUnitAtMousePosition()) return;
+        if (!TryGetPlacementTap(out _currentPointerScreenPosition)) return;
+        if (TrySelectPlacedUnitAtPointerPosition()) return;
         if (_selectedUnitType == SelectedUnitType.None) return;
 
-        TryPlaceUnitAtMousePosition();
+        TryPlaceUnitAtPointerPosition();
     }
 
     #endregion
@@ -108,6 +111,8 @@ public class UnitPlacer : MonoBehaviour {
     /// Removes all setup-placed units and resets the placement budget.
     /// </summary>
     public void ClearUnits() {
+        if (TryClearSelectedPlacedUnit()) return;
+
         AudioManager.Instance?.PlayClearUnits();
 
         foreach (var unit in placedUnits) {
@@ -155,40 +160,86 @@ public class UnitPlacer : MonoBehaviour {
     #region Input
 
     /// <summary>
-    /// Checks whether the current frame should process placement input.
+    /// Checks whether the current frame has a completed tap that can place or select units.
     /// </summary>
+    /// <param name="screenPosition">The completed tap position.</param>
     /// <returns>True when placement input should be handled.</returns>
-    private bool CanHandlePlacementInput() {
+    private bool TryGetPlacementTap(out Vector2 screenPosition) {
+        screenPosition = default;
+
         if (GameManager.Instance != null && !GameManager.Instance.IsPreGame()) return false;
 
 #if UNITY_EDITOR || UNITY_STANDALONE
-        if (!Input.GetMouseButtonDown(0)) return false;
-        if (IsPointerOverUi()) return false;
-
-        _currentPointerScreenPosition = Input.mousePosition;
-        return true;
+        return TryGetMouseTap(out screenPosition);
 #elif UNITY_ANDROID || UNITY_IOS
-        if (Input.touchCount <= 0) return false;
+        return TryGetTouchTap(out screenPosition);
+#else
+        return TryGetMouseTap(out screenPosition);
+#endif
+    }
+
+    /// <summary>
+    /// Gets a completed mouse tap while rejecting camera drags.
+    /// </summary>
+    /// <param name="screenPosition">The completed mouse tap position.</param>
+    /// <returns>True when the mouse press ended as a tap.</returns>
+    private bool TryGetMouseTap(out Vector2 screenPosition) {
+        screenPosition = default;
+
+        if (Input.GetMouseButtonDown(0)) {
+            _isPointerPressActive = !IsPointerOverUi();
+            _pointerStartScreenPosition = Input.mousePosition;
+            return false;
+        }
+
+        if (Input.GetMouseButtonUp(0)) {
+            if (!_isPointerPressActive) return false;
+
+            _isPointerPressActive = false;
+            screenPosition = Input.mousePosition;
+            return Vector2.Distance(_pointerStartScreenPosition, screenPosition) <= tapMovementThreshold;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Gets a completed touch tap while rejecting camera drags.
+    /// </summary>
+    /// <param name="screenPosition">The completed touch tap position.</param>
+    /// <returns>True when the touch ended as a tap.</returns>
+    private bool TryGetTouchTap(out Vector2 screenPosition) {
+        screenPosition = default;
+
+        if (Input.touchCount != 1) {
+            _isPointerPressActive = false;
+            return false;
+        }
 
         var touch = Input.GetTouch(0);
-        if (touch.phase != TouchPhase.Began) return false;
-        if (IsPointerOverUi(touch.fingerId)) return false;
+        switch (touch.phase) {
+            case TouchPhase.Began:
+                _isPointerPressActive = !IsPointerOverUi(touch.fingerId);
+                _pointerStartScreenPosition = touch.position;
+                return false;
+            case TouchPhase.Ended:
+                if (!_isPointerPressActive) return false;
 
-        _currentPointerScreenPosition = touch.position;
-        return true;
-#else
-        if (!Input.GetMouseButtonDown(0)) return false;
-        if (IsPointerOverUi()) return false;
-
-        _currentPointerScreenPosition = Input.mousePosition;
-        return true;
-#endif
+                _isPointerPressActive = false;
+                screenPosition = touch.position;
+                return Vector2.Distance(_pointerStartScreenPosition, screenPosition) <= tapMovementThreshold;
+            case TouchPhase.Canceled:
+                _isPointerPressActive = false;
+                return false;
+            default:
+                return false;
+        }
     }
 
     /// <summary>
     /// Attempts to place the selected unit type at the clicked world position.
     /// </summary>
-    private void TryPlaceUnitAtMousePosition() {
+    private void TryPlaceUnitAtPointerPosition() {
         var mainCamera = Camera.main;
         if (mainCamera == null) return;
 
@@ -200,7 +251,7 @@ public class UnitPlacer : MonoBehaviour {
     /// Selects an existing player unit under the mouse during setup.
     /// </summary>
     /// <returns>True when a selectable placed unit was found.</returns>
-    private bool TrySelectPlacedUnitAtMousePosition() {
+    private bool TrySelectPlacedUnitAtPointerPosition() {
         var mainCamera = Camera.main;
         if (mainCamera == null) return false;
 
@@ -276,6 +327,39 @@ public class UnitPlacer : MonoBehaviour {
 
         _selectedUnitType = SelectedUnitType.None;
         UpdateButtonVisuals();
+    }
+
+    #endregion
+    #region Removal
+
+    /// <summary>
+    /// Removes the selected placed unit during setup and refunds its cost.
+    /// </summary>
+    /// <returns>True when a selected placed unit was removed.</returns>
+    private bool TryClearSelectedPlacedUnit() {
+        if (GameManager.Instance != null && !GameManager.Instance.IsPreGame()) return false;
+        if (BattleController.Instance == null || BattleController.Instance.SelectedUnit == null) return false;
+
+        var selectedUnit = BattleController.Instance.SelectedUnit;
+        var selectedObject = selectedUnit.gameObject;
+        if (!placedUnits.Contains(selectedObject)) return false;
+
+        var refundAmount = GetUnitCost(selectedUnit.ClassType);
+
+        placedUnits.Remove(selectedObject);
+        _money += refundAmount;
+        _placedUnitsCost = Mathf.Max(0, _placedUnitsCost - refundAmount);
+        _selectedUnitType = SelectedUnitType.None;
+
+        BattleController.Instance.RemoveUnit(selectedUnit);
+        BattleController.Instance.ClearSelectedUnit();
+        Destroy(selectedObject);
+
+        AudioManager.Instance?.PlayClearUnits();
+        UpdateMoneyText();
+        UpdateUnitCostText();
+        UpdateButtonVisuals();
+        return true;
     }
 
     #endregion
@@ -404,6 +488,20 @@ public class UnitPlacer : MonoBehaviour {
             SelectedUnitType.Infantry => infantryUnitCost,
             SelectedUnitType.Cavalry => cavalryUnitCost,
             SelectedUnitType.Musket => musketUnitCost,
+            _ => 0
+        };
+    }
+
+    /// <summary>
+    /// Gets the placement cost for a placed unit class.
+    /// </summary>
+    /// <param name="unitType">The unit class being refunded.</param>
+    /// <returns>The matching unit cost.</returns>
+    private int GetUnitCost(UnitType unitType) {
+        return unitType switch {
+            UnitType.Infantry => infantryUnitCost,
+            UnitType.Cavalry => cavalryUnitCost,
+            UnitType.Ranged => musketUnitCost,
             _ => 0
         };
     }

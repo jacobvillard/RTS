@@ -22,6 +22,7 @@ namespace _Scripts.Camera {
         private Vector3 _dragOrigin;             // Previous world position under the pointer during drag.
         private UnityEngine.Camera _camera;      // Main camera being controlled.
         private bool _isDragging;                // True while a non-UI pointer is dragging the camera.
+        private bool _zoomEnabled = true;        // False while menus or game-over should block zoom.
         private float _baseDragSpeed;            // Original drag speed for reference.
 
         #endregion
@@ -49,10 +50,12 @@ namespace _Scripts.Camera {
 
         public void EnterOptions() {
             dragSpeed = 0;
+            _zoomEnabled = false;
         }
         
         public void ExitOptions() {
             dragSpeed = _baseDragSpeed;
+            _zoomEnabled = true;
         }
         
 
@@ -172,7 +175,7 @@ namespace _Scripts.Camera {
         /// Handles mouse scroll wheel zooming.
         /// </summary>
         private void HandleScrollZoom() {
-            if (_camera == null || !_camera.orthographic) return;
+            if (!CanZoom()) return;
 
             var scroll = Input.GetAxis("Mouse ScrollWheel");
             _camera.orthographicSize -= scroll * zoomSpeed * 100;
@@ -183,7 +186,7 @@ namespace _Scripts.Camera {
         /// Handles mobile pinch zooming.
         /// </summary>
         private void HandlePinchZoom() {
-            if (_camera == null || Input.touchCount != 2) return;
+            if (!CanZoom() || Input.touchCount != 2) return;
 
             var touch0 = Input.GetTouch(0);
             var touch1 = Input.GetTouch(1);
@@ -200,6 +203,16 @@ namespace _Scripts.Camera {
         /// </summary>
         private void ClampZoom() {
             _camera.orthographicSize = Mathf.Clamp(_camera.orthographicSize, minZoom, maxZoom);
+        }
+
+        /// <summary>
+        /// Checks whether camera zoom input should currently be accepted.
+        /// </summary>
+        /// <returns>True when zoom is enabled and the game has not ended.</returns>
+        private bool CanZoom() {
+            if (!_zoomEnabled || _camera == null || !_camera.orthographic) return false;
+
+            return GameManager.Instance == null || GameManager.Instance.GameState != GameState.GameOver;
         }
 
         #endregion

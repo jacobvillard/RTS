@@ -15,7 +15,8 @@ public class TimeScaleButtonController : MonoBehaviour {
     public enum TimeMode {
         Pause,
         Play,
-        Speed
+        Speed,
+        SpeedSix
     }
 
     #endregion
@@ -25,6 +26,7 @@ public class TimeScaleButtonController : MonoBehaviour {
     [SerializeField] private Button pauseButton; // Button that pauses time.
     [SerializeField] private Button playButton;  // Button that restores normal speed.
     [SerializeField] private Button speedButton; // Button that enables fast-forward.
+    [SerializeField] private Button speedSixButton; // Button that enables very fast-forward.
 
     [Header("Colours")]
     [SerializeField] private Color selectedColour = Color.white;                            // Active button colour.
@@ -70,6 +72,10 @@ public class TimeScaleButtonController : MonoBehaviour {
         TrySetTimeMode(TimeMode.Play);
     }
 
+    public void SpeedSixGame() {
+        TrySetTimeMode(TimeMode.SpeedSix);
+    }
+
     /// <summary>
     /// Applies the requested time mode immediately.
     /// </summary>
@@ -87,6 +93,9 @@ public class TimeScaleButtonController : MonoBehaviour {
             case TimeMode.Speed:
                 Time.timeScale = 2f;
                 break;
+            case TimeMode.SpeedSix:
+                Time.timeScale = 6f;
+                break;
         }
 
         UpdateButtonVisuals();
@@ -102,6 +111,7 @@ public class TimeScaleButtonController : MonoBehaviour {
         if (pauseButton != null) pauseButton.onClick.AddListener(() => TrySetTimeMode(TimeMode.Pause));
         if (playButton != null) playButton.onClick.AddListener(() => TrySetTimeMode(TimeMode.Play));
         if (speedButton != null) speedButton.onClick.AddListener(() => TrySetTimeMode(TimeMode.Speed));
+        if (speedSixButton != null) speedSixButton.onClick.AddListener(() => TrySetTimeMode(TimeMode.SpeedSix));
     }
 
     /// <summary>
@@ -111,6 +121,7 @@ public class TimeScaleButtonController : MonoBehaviour {
         if (pauseButton != null) pauseButton.onClick.RemoveAllListeners();
         if (playButton != null) playButton.onClick.RemoveAllListeners();
         if (speedButton != null) speedButton.onClick.RemoveAllListeners();
+        if (speedSixButton != null) speedSixButton.onClick.RemoveAllListeners();
     }
 
     #endregion
@@ -123,6 +134,7 @@ public class TimeScaleButtonController : MonoBehaviour {
         SetButtonColour(pauseButton, currentMode == TimeMode.Pause);
         SetButtonColour(playButton, currentMode == TimeMode.Play);
         SetButtonColour(speedButton, currentMode == TimeMode.Speed);
+        SetButtonColour(speedSixButton, currentMode == TimeMode.SpeedSix);
     }
 
     /// <summary>

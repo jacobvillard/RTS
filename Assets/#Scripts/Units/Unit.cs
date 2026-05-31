@@ -88,8 +88,22 @@ namespace _Scripts.Units {
             _rigidbody2D.bodyType = RigidbodyType2D.Dynamic;
             _rigidbody2D.gravityScale = 0f;
             _rigidbody2D.angularDrag = angularDrag;
+            _rigidbody2D.interpolation = RigidbodyInterpolation2D.Interpolate;
             _rigidbody2D.velocity = Vector2.zero;
             _rigidbody2D.angularVelocity = 0f;
+        }
+
+        /// <summary>
+        /// Aligns the NavMeshAgent with the unit's current transform position.
+        /// </summary>
+        private void SyncAgentToTransform() {
+            if (_agent == null) return;
+
+            if (_agent.isOnNavMesh) {
+                _agent.Warp(transform.position);
+            }
+
+            _agent.nextPosition = transform.position;
         }
 
         private void Start() {
@@ -97,6 +111,7 @@ namespace _Scripts.Units {
             _agent.updatePosition = _rigidbody2D == null;
             _agent.updateRotation = false;
             _agent.updateUpAxis = false;
+            SyncAgentToTransform();
             UpdateStoppingDistance();
             UpdateAgentSpeed();
             
@@ -161,6 +176,12 @@ namespace _Scripts.Units {
         private void Update() {
             if (!IsAlive) return;
 
+            if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) {
+                SyncHoldPosition();
+                FixZedPos();
+                return;
+            }
+
             RefreshTargetUnits();   // Refresh the list of target units
             UpdateCurrentTarget();  // Update the current target
             TryAttack();            // Attempt to attack
@@ -170,6 +191,11 @@ namespace _Scripts.Units {
 
         private void FixedUpdate() {
             if (!IsAlive || _agent == null || _rigidbody2D == null) return;
+            if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) {
+                _rigidbody2D.velocity = Vector2.zero;
+                _agent.nextPosition = transform.position;
+                return;
+            }
 
             var nextPosition = Vector2.MoveTowards(
                 _rigidbody2D.position,
@@ -177,7 +203,7 @@ namespace _Scripts.Units {
                 _agent.speed * Time.fixedDeltaTime);
 
             _rigidbody2D.MovePosition(nextPosition);
-            _agent.nextPosition = transform.position;
+            _agent.nextPosition = new Vector3(nextPosition.x, nextPosition.y, transform.position.z);
         }
 
         /// <summary>
@@ -187,6 +213,17 @@ namespace _Scripts.Units {
             var fixedPos = transform.position;
             fixedPos.z = 0f;
             transform.position = fixedPos;
+        }
+
+        /// <summary>
+        /// Keeps the unit's hold point at its scene position while setup is active.
+        /// </summary>
+        private void SyncHoldPosition() {
+            _holdPosition = transform.position;
+
+            if (_agent != null) {
+                _agent.nextPosition = transform.position;
+            }
         }
         
 
