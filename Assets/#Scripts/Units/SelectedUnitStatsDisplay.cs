@@ -1,4 +1,5 @@
 using _Scripts.GameManagement;
+using _Scripts.UI;
 using TMPro;
 using UnityEngine;
 
@@ -33,11 +34,33 @@ namespace _Scripts.Units {
         #region Unity Methods
 
         private void Start() {
+            ResolveTextReferences();
             RefreshDisplay();
         }
 
         private void Update() {
             RefreshDisplay();
+        }
+
+        #endregion
+        #region Initialization
+
+        /// <summary>
+        /// Finds stats text from prefab-root references when direct fallbacks are not assigned.
+        /// </summary>
+        private void ResolveTextReferences() {
+            classTypeText ??= GetRegisteredText(PrefabTextReferences.TextSlot.SelectedUnitClass);
+            healthText ??= GetRegisteredText(PrefabTextReferences.TextSlot.SelectedUnitHealth);
+            speedText ??= GetRegisteredText(PrefabTextReferences.TextSlot.SelectedUnitSpeed);
+        }
+
+        /// <summary>
+        /// Gets a registered prefab-root TMP label.
+        /// </summary>
+        /// <param name="slot">The text slot being requested.</param>
+        /// <returns>The registered TMP label, or null.</returns>
+        private static TextMeshProUGUI GetRegisteredText(PrefabTextReferences.TextSlot slot) {
+            return PrefabTextReferences.TryGetText(slot, out var text) ? text : null;
         }
 
         #endregion

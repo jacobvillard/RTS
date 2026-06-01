@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using _Scripts.GameManagement;
+using _Scripts.UI;
 using _Scripts.Units;
 using TMPro;
 using UnityEngine;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Handles pre-round unit purchasing, selection, placement, and setup reset.
 /// </summary>
-public class UnitPlacer : MonoBehaviour {
+public class UnitPlacer : Singleton<UnitPlacer> {
 
     #region Types
 
@@ -62,6 +63,14 @@ public class UnitPlacer : MonoBehaviour {
 
     #endregion
     #region Unity Methods
+
+    protected override void Awake() {
+        base.Awake();
+
+        if (Instance != this) {
+            enabled = false;
+        }
+    }
 
     private void Start() {
         InitializeReferences();
@@ -133,6 +142,24 @@ public class UnitPlacer : MonoBehaviour {
         BattleController.Instance?.ClearAllPlayerUnits();
     }
 
+    /// <summary>
+    /// Rebinds scene UI references and resets placement money after a scene load.
+    /// </summary>
+    public void RefreshForSceneLoad() {
+        levelStats = GameManager.Instance != null ? GameManager.Instance.LevelStats : null;
+        infantryUnitCostText = null;
+        cavalryUnitCostText = null;
+        musketUnitCostText = null;
+        placedUnits.Clear();
+        _placedUnitsCost = 0;
+        _selectedUnitType = SelectedUnitType.None;
+
+        InitializeReferences();
+        InitializeMoney();
+        UpdateUnitCostText();
+        UpdateButtonVisuals();
+    }
+
     #endregion
     #region Initialization
 
@@ -142,10 +169,20 @@ public class UnitPlacer : MonoBehaviour {
     private void InitializeReferences() {
         levelStats ??= GameManager.Instance != null ? GameManager.Instance.LevelStats : null;
         placementGrid ??= FindObjectOfType<Grid>();
+        ResolveCostTextReferences();
 
         if (blockedByUnitLayers.value == 0) {
             blockedByUnitLayers = LayerMask.GetMask("Player", "AI");
         }
+    }
+
+    /// <summary>
+    /// Finds cost text from prefab-root references when no direct fallback has been assigned.
+    /// </summary>
+    private void ResolveCostTextReferences() {
+        infantryUnitCostText ??= GetRegisteredText(PrefabTextReferences.TextSlot.InfantryUnitCost);
+        cavalryUnitCostText ??= GetRegisteredText(PrefabTextReferences.TextSlot.CavalryUnitCost);
+        musketUnitCostText ??= GetRegisteredText(PrefabTextReferences.TextSlot.MusketUnitCost);
     }
 
     /// <summary>
@@ -516,6 +553,15 @@ public class UnitPlacer : MonoBehaviour {
         if (levelStats != null) {
             levelStats.UpdateMoney(_money);
         }
+    }
+
+    /// <summary>
+    /// Gets a registered prefab-root TMP label.
+    /// </summary>
+    /// <param name="slot">The text slot being requested.</param>
+    /// <returns>The registered TMP label, or null.</returns>
+    private static TextMeshProUGUI GetRegisteredText(PrefabTextReferences.TextSlot slot) {
+        return PrefabTextReferences.TryGetText(slot, out var text) ? text : null;
     }
 
     /// <summary>

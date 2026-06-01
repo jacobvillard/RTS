@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using _Scripts.Units;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using Unit = _Scripts.Units.Unit;
 
 namespace _Scripts.GameManagement {
@@ -19,6 +20,7 @@ namespace _Scripts.GameManagement {
         private bool _battleStarted;                          // True once registered units have been released.
         private Vector2 _commandPointerStartScreenPosition;    // Pointer position where a movement command tap began.
         private bool _isCommandPointerPressActive;             // True while waiting to confirm a movement command tap.
+        private float _nextBattleDebugTime;                    // Next time a battle-state debug line can be printed.
 
         public Unit SelectedUnit { get; private set; }
         public string winningTeam; 
@@ -28,10 +30,47 @@ namespace _Scripts.GameManagement {
         #endregion
         #region Unity Methods
 
+        private void OnEnable() {
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        protected override void OnDestroy() {
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            base.OnDestroy();
+        }
+
         private void Update() {
             TryStartBattle();
             CheckWinLoseConditions();
             HandleSelectedUnitInput();
+        }
+
+        #endregion
+        #region Scene Load
+
+        /// <summary>
+        /// Resets persisted battle state before units in the loaded scene register themselves.
+        /// </summary>
+        /// <param name="scene">The scene that was loaded.</param>
+        /// <param name="loadMode">The way Unity loaded the scene.</param>
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode loadMode) {
+            RefreshForSceneLoad();
+        }
+
+        /// <summary>
+        /// Clears runtime battle state for a newly loaded scene.
+        /// </summary>
+        public void RefreshForSceneLoad() {
+            _teamPlayerUnits.Clear();
+            _teamAIUnits.Clear();
+            _battleResolved = false;
+            _battleStarted = false;
+            _isCommandPointerPressActive = false;
+            _nextBattleDebugTime = 0f;
+            winningTeam = null;
+            ClearSelectedUnit();
+
+            Debug.Log($"[BattleDebug] BattleController refreshed for scene '{SceneManager.GetActiveScene().name}'.");
         }
 
         #endregion
@@ -107,6 +146,11 @@ namespace _Scripts.GameManagement {
         /// Prepares all registered units for active battle movement.
         /// </summary>
         public void PrepareUnitsForBattle() {
+            Debug.Log(
+                $"[BattleDebug] PrepareUnitsForBattle called. " +
+                $"Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}, " +
+                $"GameState: {(GameManager.Instance != null ? GameManager.Instance.GameState.ToString() : "No GameManager")}.");
+
             PrepareUnits(_teamPlayerUnits);
             PrepareUnits(_teamAIUnits);
         }
@@ -211,6 +255,7 @@ namespace _Scripts.GameManagement {
             if (GameManager.Instance == null || GameManager.Instance.GameState != GameState.Playing) return;
 
             RemoveMissingUnits();
+            LogBattleState();
 
             var teamAAlive = _teamPlayerUnits.Exists(unit => unit != null && unit.IsAlive);
             var teamBAlive = _teamAIUnits.Exists(unit => unit != null && unit.IsAlive);
@@ -245,6 +290,35 @@ namespace _Scripts.GameManagement {
         private void RemoveMissingUnits() {
             _teamPlayerUnits.RemoveAll(unit => unit == null);
             _teamAIUnits.RemoveAll(unit => unit == null);
+        }
+
+        /// <summary>
+        /// Periodically logs the current battle registration state.
+        /// </summary>
+        private void LogBattleState() {
+            if (Time.time < _nextBattleDebugTime) return;
+
+            _nextBattleDebugTime = Time.time + 1f;
+            Debug.Log(
+                $"[BattleDebug] State={GameManager.Instance.GameState}, Started={_battleStarted}, Resolved={_battleResolved}, " +
+                $"Player registered/alive={_teamPlayerUnits.Count}/{CountAlive(_teamPlayerUnits)}, " +
+                $"AI registered/alive={_teamAIUnits.Count}/{CountAlive(_teamAIUnits)}.");
+        }
+
+        /// <summary>
+        /// Counts living units in a registered team list.
+        /// </summary>
+        /// <param name="units">The team list to inspect.</param>
+        /// <returns>The number of living units.</returns>
+        private static int CountAlive(List<Unit> units) {
+            var count = 0;
+            foreach (var unit in units) {
+                if (unit != null && unit.IsAlive) {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         #endregion

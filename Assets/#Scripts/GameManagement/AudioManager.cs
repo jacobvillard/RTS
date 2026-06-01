@@ -94,6 +94,7 @@ namespace _Scripts.GameManagement {
                 return;
             }
 
+            volumeMultipliers?.LoadSavedValues();
             AddVolumeSliderListeners();
             EnsureUiSource();
             EnsureMusicSource();

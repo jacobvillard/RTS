@@ -5,7 +5,7 @@ using _Scripts.GameManagement;
 /// <summary>
 /// Controls pause/play/speed buttons and applies the selected time scale.
 /// </summary>
-public class TimeScaleButtonController : MonoBehaviour {
+public class TimeScaleButtonController : Singleton<TimeScaleButtonController> {
 
     #region Types
 
@@ -40,7 +40,14 @@ public class TimeScaleButtonController : MonoBehaviour {
     #endregion
     #region Unity Methods
 
-    private void Awake() {
+    protected override void Awake() {
+        base.Awake();
+
+        if (Instance != this) {
+            enabled = false;
+            return;
+        }
+
         _baseFixedDeltaTime = Time.fixedDeltaTime;
         AddButtonListeners();
     }
@@ -49,8 +56,9 @@ public class TimeScaleButtonController : MonoBehaviour {
         ApplyTimeMode(currentMode);
     }
 
-    private void OnDestroy() {
+    protected override void OnDestroy() {
         RemoveButtonListeners();
+        base.OnDestroy();
     }
 
     #endregion

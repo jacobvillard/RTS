@@ -38,7 +38,10 @@ namespace _Scripts.GameManagement {
         private void Awake() {
             ResolveReferences();
             AddButtonListeners();
-            SetPage(GetPageIndexForLevel(lastUnlockedLevel));
+        }
+
+        private void OnEnable() {
+            RefreshFromSave();
         }
 
         private void OnDestroy() {
@@ -88,6 +91,14 @@ namespace _Scripts.GameManagement {
             levelLoader.LoadLevel(levelNumber.ToString());
         }
 
+        /// <summary>
+        /// Refreshes unlock data from the save file and redraws the current page.
+        /// </summary>
+        public void RefreshFromSave() {
+            RefreshLastUnlockedLevel();
+            SetPage(GetPageIndexForLevel(lastUnlockedLevel));
+        }
+
         #endregion
         #region Setup
 
@@ -95,7 +106,14 @@ namespace _Scripts.GameManagement {
         /// Finds scene references that were not assigned in the Inspector.
         /// </summary>
         private void ResolveReferences() {
-            levelLoader ??= FindObjectOfType<LevelLoader>();
+            levelLoader ??= LevelLoader.Instance != null ? LevelLoader.Instance : FindObjectOfType<LevelLoader>();
+        }
+
+        /// <summary>
+        /// Reads the highest played level from the persistent save file.
+        /// </summary>
+        private void RefreshLastUnlockedLevel() {
+            lastUnlockedLevel = PersistentGameSettings.GetHighestLevelPlayed(1);
         }
 
         /// <summary>

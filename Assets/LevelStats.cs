@@ -1,4 +1,6 @@
 using TMPro;
+using _Scripts.GameManagement;
+using _Scripts.UI;
 using UnityEngine;
 
 /// <summary>
@@ -9,14 +11,20 @@ public class LevelStats : MonoBehaviour {
     #region Variables
 
     [Header("Money")]
-    public int startMoney = 022;                        // Starting money available before the battle.
+    public int startMoney = 220;                        // Starting money available before the battle.
     public int moneyAmt;                                // Current money amount displayed to the player.
-    [SerializeField] private TextMeshProUGUI moneyText; // Money label in the UI.
+    [SerializeField] private TextMeshProUGUI moneyText; // Optional money label fallback.
 
     #endregion
     #region Unity Methods
 
+    private void Awake() {
+        ApplyLevelSettings();
+        ResolveTextReferences();
+    }
+
     private void Start() {
+        ResolveTextReferences();
         UpdateMoney(moneyAmt);
     }
 
@@ -30,6 +38,41 @@ public class LevelStats : MonoBehaviour {
     public void UpdateMoney(int amount) {
         moneyAmt = amount;
         SetText(moneyText, moneyAmt.ToString());
+    }
+
+    /// <summary>
+    /// Refreshes level money and UI references after a new scene loads.
+    /// </summary>
+    public void RefreshForSceneLoad() {
+        moneyText = null;
+        ApplyLevelSettings();
+        ResolveTextReferences();
+        UpdateMoney(startMoney);
+    }
+
+    #endregion
+    #region Initialization
+
+    /// <summary>
+    /// Applies per-level starting money from the Resources-loaded level settings database.
+    /// </summary>
+    private void ApplyLevelSettings() {
+        var database = LevelSettingsDatabase.Load();
+        if (database == null) return;
+
+        var settings = database.GetCurrentLevelSettings();
+        startMoney = settings.startMoney;
+    }
+
+    /// <summary>
+    /// Finds UI text from prefab-root references when no direct fallback is assigned.
+    /// </summary>
+    private void ResolveTextReferences() {
+        if (moneyText != null) return;
+
+        if (PrefabTextReferences.TryGetText(PrefabTextReferences.TextSlot.Money, out var text)) {
+            moneyText = text;
+        }
     }
 
     #endregion

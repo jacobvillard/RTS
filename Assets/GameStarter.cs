@@ -19,7 +19,9 @@ public class GameStarter : MonoBehaviour {
     /// Starts the battle if the player has placed at least one unit.
     /// </summary>
     public void StartGame() {
-        if (unitPlacer != null && unitPlacer.placedUnitsCount == 0) {
+        var activeUnitPlacer = UnitPlacer.Instance != null ? UnitPlacer.Instance : unitPlacer;
+
+        if (activeUnitPlacer != null && activeUnitPlacer.placedUnitsCount == 0) {
             Debug.LogWarning("No units placed! Starting the game without any units may lead to unexpected behaviour.");
             return;
         }

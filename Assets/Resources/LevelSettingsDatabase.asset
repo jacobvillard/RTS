@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cef9f15f775c473798b35a162fefbcf0, type: 3}
+  m_Name: LevelSettingsDatabase
+  m_EditorClassIdentifier: 
+  fallbackStartMoney: 2200
+  fallbackCameraOrthographicSize: 20
+  levels:
+  - sceneName: 1
+    startMoney: 220
+    cameraOrthographicSize: 6
+  - sceneName: 1
+    startMoney: 220
+    cameraOrthographicSize: 6
+  - sceneName: 2
+    startMoney: 400
+    cameraOrthographicSize: 6
+  - sceneName: 3
+    startMoney: 400
+    cameraOrthographicSize: 6
+  - sceneName: 4
+    startMoney: 800
+    cameraOrthographicSize: 6
+  - sceneName: 5
+    startMoney: 300
+    cameraOrthographicSize: 10
+  - sceneName: 6
+    startMoney: 800
+    cameraOrthographicSize: 6
+  - sceneName: 7
+    startMoney: 400
+    cameraOrthographicSize: 6
+  - sceneName: 8
+    startMoney: 900
+    cameraOrthographicSize: 7.4
+  - sceneName: 9
+    startMoney: 1100
+    cameraOrthographicSize: 12.25
+  - sceneName: 10
+    startMoney: 1100
+    cameraOrthographicSize: 12.25
+  - sceneName: 11
+    startMoney: 1200
+    cameraOrthographicSize: 9.25
+  - sceneName: 12
+    startMoney: 1500
+    cameraOrthographicSize: 12.25
+  - sceneName: 13
+    startMoney: 1300
+    cameraOrthographicSize: 12.25
+  - sceneName: 14
+    startMoney: 1600
+    cameraOrthographicSize: 12.25
+  - sceneName: 15
+    startMoney: 1700
+    cameraOrthographicSize: 12.25
+  - sceneName: 16
+    startMoney: 1700
+    cameraOrthographicSize: 12.25
+  - sceneName: 17
+    startMoney: 1800
+    cameraOrthographicSize: 12.25
+  - sceneName: 18
+    startMoney: 1900
+    cameraOrthographicSize: 12.25
+  - sceneName: 19
+    startMoney: 1950
+    cameraOrthographicSize: 10.2
+  - sceneName: 20
+    startMoney: 2000
+    cameraOrthographicSize: 12.25
+  - sceneName: 21
+    startMoney: 1400
+    cameraOrthographicSize: 12.25
+  - sceneName: 22
+    startMoney: 1600
+    cameraOrthographicSize: 12.25
+  - sceneName: 23
+    startMoney: 1400
+    cameraOrthographicSize: 12.25
+  - sceneName: 24
+    startMoney: 1100
+    cameraOrthographicSize: 12.25
+  - sceneName: 25
+    startMoney: 1500
+    cameraOrthographicSize: 12.25
+  - sceneName: 26
+    startMoney: 2000
+    cameraOrthographicSize: 12.25
+  - sceneName: 27
+    startMoney: 1300
+    cameraOrthographicSize: 12.25
+  - sceneName: 28
+    startMoney: 2000
+    cameraOrthographicSize: 12.25
+  - sceneName: 29
+    startMoney: 1200
+    cameraOrthographicSize: 12.25
+  - sceneName: 30
+    startMoney: 1800
+    cameraOrthographicSize: 12.25
+  - sceneName: 31
+    startMoney: 1050
+    cameraOrthographicSize: 12.25
+  - sceneName: 32
+    startMoney: 1000
+    cameraOrthographicSize: 12.25
+  - sceneName: 33
+    startMoney: 1100
+    cameraOrthographicSize: 12.25
+  - sceneName: 34
+    startMoney: 1150
+    cameraOrthographicSize: 12.25
+  - sceneName: 35
+    startMoney: 1300
+    cameraOrthographicSize: 12.25
+  - sceneName: 36
+    startMoney: 1220
+    cameraOrthographicSize: 12.25
+  - sceneName: 37
+    startMoney: 1350
+    cameraOrthographicSize: 12.25
+  - sceneName: 38
+    startMoney: 990
+    cameraOrthographicSize: 12.25
+  - sceneName: 39
+    startMoney: 1200
+    cameraOrthographicSize: 12.25
+  - sceneName: 40
+    startMoney: 1550
+    cameraOrthographicSize: 12.25

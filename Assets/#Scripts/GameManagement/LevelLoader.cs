@@ -5,7 +5,7 @@ namespace _Scripts.GameManagement {
     /// <summary>
     /// Provides UI-friendly scene loading helpers.
     /// </summary>
-    public class LevelLoader : MonoBehaviour {
+    public class LevelLoader : Singleton<LevelLoader> {
 
         #region Variables
 

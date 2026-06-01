@@ -66,9 +66,13 @@ namespace _Scripts.Units {
         private readonly List<MapTerrainZone> _activeForestZones = new();
         private const float MinimumStoppingDistance = 0.55f;
         private const float NavMeshStartSampleRadius = 2f;
+        private const string PlaceableLayerName = "Placeable";
+        private const string NoCollisionLayerName = "NoCol";
         private float _currentSpeedMultiplier = 1f;
         private bool _isFollowingManualMoveCommand;                // True while obeying a player-issued movement command
         private bool _wasInPreGame;                                // True while this unit was last synced during setup
+        private float _nextTargetDebugTime;                        // Next time targeting debug can print for this unit
+        private string _lastTargetDebugMessage;                    // Last targeting debug line used for throttling
         public bool IsInForest => _activeForestZones.Count > 0;
         
         
@@ -214,6 +218,9 @@ namespace _Scripts.Units {
             destination = transform.position;
             _isFollowingManualMoveCommand = false;
             _wasInPreGame = false;
+            Debug.Log(
+                $"[BattleDebug][TargetDebug:{name}] Prepared for battle. Team={team}, Type={unitType}, " +
+                $"AgentEnabled={(_agent != null && _agent.enabled)}, Position={transform.position}.");
         }
         
         #endregion
@@ -387,6 +394,11 @@ namespace _Scripts.Units {
         /// </summary>
         private void RefreshTargetUnits()
         {
+            if (BattleController.Instance == null) {
+                LogTargeting("cannot refresh targets: no BattleController instance.");
+                return;
+            }
+
             var opposingUnits = BattleController.Instance.GetOpposingUnits(team);
 
             LogTargeting($"checking {opposingUnits.Count} opposing units. Current target list: {targetUnits.Count}");
@@ -419,9 +431,13 @@ namespace _Scripts.Units {
                 closest = t;
             }
             
-            if(closest == null) return;
+            if(closest == null) {
+                LogTargeting($"no current target selected. Valid target list count: {targetUnits.Count}.");
+                return;
+            }
             
             _currentTarget = closest;
+            LogTargeting($"current target set to '{_currentTarget.name}'.");
         }
 
         private bool IsValidTarget(Unit candidate) {
@@ -482,11 +498,26 @@ namespace _Scripts.Units {
 
             var hits = Physics2D.RaycastAll(start, end - start, distance);
             foreach (var hit in hits) {
-                if (hit.collider == null || hit.collider.isTrigger || hit.collider.gameObject == gameObject) continue;
-                if (hit.collider.GetComponentInParent<Unit>() != null) continue;
+                if (!IsLineOfSightBlocker(hit.collider)) continue;
+
                 LogTargeting($"LOS blocked by '{hit.collider.gameObject.name}' on layer '{LayerMask.LayerToName(hit.collider.gameObject.layer)}'.");
                 return false;
             }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks whether a collider should block combat line of sight.
+        /// </summary>
+        /// <param name="collider">The collider hit by the line-of-sight raycast.</param>
+        /// <returns>True when the collider should block attacks.</returns>
+        private bool IsLineOfSightBlocker(Collider2D collider) {
+            if (collider == null || collider.isTrigger || collider.gameObject == gameObject) return false;
+            if (collider.GetComponentInParent<Unit>() != null) return false;
+            if (collider.GetComponentInParent<MapTerrainZone>() != null) return false;
+            if (collider.gameObject.layer == LayerMask.NameToLayer(PlaceableLayerName)) return false;
+            if (collider.gameObject.layer == LayerMask.NameToLayer(NoCollisionLayerName)) return false;
 
             return true;
         }
@@ -593,6 +624,11 @@ namespace _Scripts.Units {
         /// </summary>
         /// <param name="point"></param>
         private void MoveTowards(Vector2 point) {
+            if (_agent == null || !_agent.enabled) {
+                LogTargeting($"cannot move: agent missing or disabled. Agent exists={_agent != null}, enabled={(_agent != null && _agent.enabled)}.");
+                return;
+            }
+
             if ((Vector2)transform.position != point) {
                 _agent.SetDestination(point);
             }
@@ -933,9 +969,11 @@ namespace _Scripts.Units {
         }
 
         private void LogTargeting(string message) {
-            if (!debugTargeting) return;
+            if (!debugTargeting && Time.time < _nextTargetDebugTime && message == _lastTargetDebugMessage) return;
 
-            Debug.Log($"[Targeting:{name} | {team} | {unitType}] {message}", this);
+            _lastTargetDebugMessage = message;
+            _nextTargetDebugTime = Time.time + 1f;
+            Debug.Log($"[BattleDebug][Targeting:{name} | {team} | {unitType}] {message}", this);
         }
         
         #endregion

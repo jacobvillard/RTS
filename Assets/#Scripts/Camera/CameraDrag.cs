@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using _Scripts.GameManagement;
 
 namespace _Scripts.Camera {
     /// <summary>
@@ -31,6 +32,7 @@ namespace _Scripts.Camera {
         private void Start() {
             _camera = UnityEngine.Camera.main;
             _baseDragSpeed = dragSpeed;
+            ApplyLevelCameraSettings();
         }
 
         private void Update() {
@@ -42,6 +44,22 @@ namespace _Scripts.Camera {
             HandlePinchZoom();
 #endif
             ClampCameraPosition();
+        }
+
+        #endregion
+        #region Initialization
+
+        /// <summary>
+        /// Applies the current level's configured starting orthographic size.
+        /// </summary>
+        private void ApplyLevelCameraSettings() {
+            if (_camera == null || !_camera.orthographic) return;
+
+            var database = LevelSettingsDatabase.Load();
+            if (database == null) return;
+
+            var settings = database.GetCurrentLevelSettings();
+            _camera.orthographicSize = Mathf.Clamp(settings.cameraOrthographicSize, minZoom, maxZoom);
         }
 
         #endregion

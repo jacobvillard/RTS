@@ -38,6 +38,7 @@ namespace _Scripts.Units {
             }
 
             Instance = this;
+            DontDestroyOnLoad(gameObject);
             LoadSavedTeamImages();
         }
 
