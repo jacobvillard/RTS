@@ -65,8 +65,10 @@ namespace _Scripts.Units {
         private readonly List<MapTerrainZone> _activeTerrainZones = new();
         private readonly List<MapTerrainZone> _activeForestZones = new();
         private const float MinimumStoppingDistance = 0.55f;
+        private const float NavMeshStartSampleRadius = 2f;
         private float _currentSpeedMultiplier = 1f;
         private bool _isFollowingManualMoveCommand;                // True while obeying a player-issued movement command
+        private bool _wasInPreGame;                                // True while this unit was last synced during setup
         public bool IsInForest => _activeForestZones.Count > 0;
         
         
@@ -79,6 +81,11 @@ namespace _Scripts.Units {
                 childSpriteRenderer = transform.GetChild(0).GetComponent<SpriteRenderer>();
 
             ConfigureRigidbody2D();
+            _agent = GetComponent<NavMeshAgent>();
+
+            if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) {
+                SetAgentActive(false);
+            }
         }
 
         private void ConfigureRigidbody2D() {
@@ -99,24 +106,50 @@ namespace _Scripts.Units {
         private void SyncAgentToTransform() {
             if (_agent == null) return;
 
-            if (_agent.isOnNavMesh) {
-                _agent.Warp(transform.position);
+            if (!_agent.enabled) return;
+
+            var targetPosition = transform.position;
+            if (NavMesh.SamplePosition(transform.position, out var hit, NavMeshStartSampleRadius, NavMesh.AllAreas)) {
+                targetPosition = hit.position;
             }
 
-            _agent.nextPosition = transform.position;
+            _agent.Warp(targetPosition);
+            _agent.nextPosition = targetPosition;
+
+            if (_rigidbody2D != null) {
+                _rigidbody2D.position = targetPosition;
+                _rigidbody2D.velocity = Vector2.zero;
+                _rigidbody2D.angularVelocity = 0f;
+            }
+
+            transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
         }
 
         private void Start() {
-            _agent = GetComponent<NavMeshAgent>();
+            _agent ??= GetComponent<NavMeshAgent>();
             _agent.updatePosition = _rigidbody2D == null;
             _agent.updateRotation = false;
             _agent.updateUpAxis = false;
+            _wasInPreGame = GameManager.Instance != null && GameManager.Instance.IsPreGame();
+            SetAgentActive(!_wasInPreGame);
             SyncAgentToTransform();
             UpdateStoppingDistance();
             UpdateAgentSpeed();
             
             _holdPosition = new Vector2(transform.position.x,transform.position.y) ;
             
+        }
+
+        /// <summary>
+        /// Enables the NavMeshAgent only when active movement should be allowed.
+        /// </summary>
+        /// <param name="active">Whether the agent should be active.</param>
+        private void SetAgentActive(bool active) {
+            if (_agent == null) return;
+
+            if (_agent.enabled == active) return;
+
+            _agent.enabled = active;
         }
 
         /// <summary>
@@ -170,6 +203,18 @@ namespace _Scripts.Units {
             _activeForestZones.Remove(terrainZone);
             UpdateAgentSpeed();
         }
+
+        /// <summary>
+        /// Re-syncs runtime movement state when the battle leaves setup.
+        /// </summary>
+        public void PrepareForBattle() {
+            SetAgentActive(true);
+            SyncAgentToTransform();
+            SyncHoldPosition();
+            destination = transform.position;
+            _isFollowingManualMoveCommand = false;
+            _wasInPreGame = false;
+        }
         
         #endregion
         #region Update
@@ -178,10 +223,13 @@ namespace _Scripts.Units {
 
             if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) {
                 SyncHoldPosition();
+                SetAgentActive(false);
+                _wasInPreGame = true;
                 FixZedPos();
                 return;
             }
 
+            EnsureReadyForActiveGame();
             RefreshTargetUnits();   // Refresh the list of target units
             UpdateCurrentTarget();  // Update the current target
             TryAttack();            // Attempt to attack
@@ -193,10 +241,12 @@ namespace _Scripts.Units {
             if (!IsAlive || _agent == null || _rigidbody2D == null) return;
             if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) {
                 _rigidbody2D.velocity = Vector2.zero;
-                _agent.nextPosition = transform.position;
+                SetAgentActive(false);
+                _wasInPreGame = true;
                 return;
             }
 
+            EnsureReadyForActiveGame();
             var nextPosition = Vector2.MoveTowards(
                 _rigidbody2D.position,
                 new Vector2(_agent.nextPosition.x, _agent.nextPosition.y),
@@ -204,6 +254,15 @@ namespace _Scripts.Units {
 
             _rigidbody2D.MovePosition(nextPosition);
             _agent.nextPosition = new Vector3(nextPosition.x, nextPosition.y, transform.position.z);
+        }
+
+        /// <summary>
+        /// Applies one final sync when the game leaves setup before movement resumes.
+        /// </summary>
+        private void EnsureReadyForActiveGame() {
+            if (!_wasInPreGame) return;
+
+            PrepareForBattle();
         }
 
         /// <summary>
@@ -222,7 +281,9 @@ namespace _Scripts.Units {
             _holdPosition = transform.position;
 
             if (_agent != null) {
-                _agent.nextPosition = transform.position;
+                if (_agent.enabled) {
+                    _agent.nextPosition = transform.position;
+                }
             }
         }
         

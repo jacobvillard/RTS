@@ -35,10 +35,13 @@ public class TimeScaleButtonController : MonoBehaviour {
     [Header("Current State")]
     [SerializeField] private TimeMode currentMode = TimeMode.Play; // Currently applied time mode.
 
+    private float _baseFixedDeltaTime; // Original fixed timestep restored/scaled with time mode changes.
+
     #endregion
     #region Unity Methods
 
     private void Awake() {
+        _baseFixedDeltaTime = Time.fixedDeltaTime;
         AddButtonListeners();
     }
 
@@ -72,6 +75,10 @@ public class TimeScaleButtonController : MonoBehaviour {
         TrySetTimeMode(TimeMode.Play);
     }
 
+    public void SpeedGame() {
+        TrySetTimeMode(TimeMode.Speed);
+    }
+
     public void SpeedSixGame() {
         TrySetTimeMode(TimeMode.SpeedSix);
     }
@@ -98,6 +105,7 @@ public class TimeScaleButtonController : MonoBehaviour {
                 break;
         }
 
+        Time.fixedDeltaTime = _baseFixedDeltaTime * Mathf.Max(Time.timeScale, 0.01f);
         UpdateButtonVisuals();
     }
 

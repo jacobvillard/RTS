@@ -32,6 +32,7 @@ namespace _Scripts.GameManagement {
                 return;
             }
 
+            ResetTimeBeforeSceneLoad();
             SceneManager.LoadScene(levelName);
         }
 
@@ -40,6 +41,7 @@ namespace _Scripts.GameManagement {
         /// </summary>
         /// <param name="buildIndex">The build index to load.</param>
         public void LoadLevel(int buildIndex) {
+            ResetTimeBeforeSceneLoad();
             SceneManager.LoadScene(buildIndex);
         }
 
@@ -47,6 +49,7 @@ namespace _Scripts.GameManagement {
         /// Reloads the currently active scene.
         /// </summary>
         public void ReloadCurrentLevel() {
+            ResetTimeBeforeSceneLoad();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
@@ -68,6 +71,14 @@ namespace _Scripts.GameManagement {
         /// </summary>
         public void QuitGame() {
             Application.Quit();
+        }
+
+        /// <summary>
+        /// Clears global time scaling before changing scenes.
+        /// </summary>
+        private static void ResetTimeBeforeSceneLoad() {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = 0.02f;
         }
 
         #endregion

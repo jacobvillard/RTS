@@ -75,6 +75,7 @@ public class GameManager : Singleton<GameManager> {
         StopEndGameDelay();
         SetGameState(GameState.Playing);
         SetTimeMode(TimeScaleButtonController.TimeMode.Play);
+        BattleController.Instance?.PrepareUnitsForBattle();
 
         if (unitPlacementArea != null) {
             unitPlacementArea.enabled = false;

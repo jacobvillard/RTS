@@ -108,9 +108,19 @@ namespace _Scripts.GameManagement {
             if (previousPageButton != null) previousPageButton.onClick.AddListener(_previousPageAction);
             if (nextPageButton != null) nextPageButton.onClick.AddListener(_nextPageAction);
 
+            var activeButtonCount = GetActiveLevelButtonCount();
             for (var i = 0; i < levelButtons.Count; i++) {
                 var button = levelButtons[i];
-                if (button == null) continue;
+                if (button == null) {
+                    _levelButtonActions.Add(null);
+                    continue;
+                }
+
+                if (i >= activeButtonCount) {
+                    _levelButtonActions.Add(null);
+                    button.gameObject.SetActive(false);
+                    continue;
+                }
 
                 var buttonIndex = i;
                 UnityAction clickAction = () => LoadLevel(GetLevelNumberForButton(buttonIndex));
@@ -148,9 +158,13 @@ namespace _Scripts.GameManagement {
         /// Updates level numbers and button interactability for the current page.
         /// </summary>
         private void RefreshLevelButtons() {
+            var activeButtonCount = GetActiveLevelButtonCount();
             for (var i = 0; i < levelButtons.Count; i++) {
                 var button = levelButtons[i];
                 if (button == null) continue;
+                var isActiveSlot = i < activeButtonCount;
+                button.gameObject.SetActive(isActiveSlot);
+                if (!isActiveSlot) continue;
 
                 var levelNumber = GetLevelNumberForButton(i);
                 var label = GetButtonLabel(button);
@@ -191,6 +205,14 @@ namespace _Scripts.GameManagement {
         /// <returns>The page count.</returns>
         private int GetPageCount() {
             return Mathf.Max(0, pageIcons.Count);
+        }
+
+        /// <summary>
+        /// Gets the number of level button slots that should be visible on each page.
+        /// </summary>
+        /// <returns>The visible level button count.</returns>
+        private int GetActiveLevelButtonCount() {
+            return Mathf.Min(levelsPerPage, levelButtons.Count);
         }
 
         /// <summary>

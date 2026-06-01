@@ -10,6 +10,11 @@ namespace _Scripts.Camera {
 
         #region Variables
 
+        private const float CommandTapMovementThreshold = 20f; // Maximum touch movement still treated as a command tap.
+
+        private Vector2 _commandPointerStartScreenPosition; // Pointer position where a movement command tap began.
+        private bool _isCommandPointerPressActive;          // True while waiting to confirm a movement command tap.
+
         #endregion
         #region Unity Methods
 
@@ -42,7 +47,7 @@ namespace _Scripts.Camera {
         /// </summary>
         /// <param name="screenPosition">The valid command screen position.</param>
         /// <returns>True when a command pointer began this frame.</returns>
-        private static bool TryGetCommandScreenPosition(out Vector2 screenPosition) {
+        private bool TryGetCommandScreenPosition(out Vector2 screenPosition) {
 #if UNITY_EDITOR || UNITY_STANDALONE
             screenPosition = Input.mousePosition;
             if (!Input.GetMouseButtonDown(0)) return false;
@@ -50,15 +55,7 @@ namespace _Scripts.Camera {
 
             return true;
 #elif UNITY_ANDROID || UNITY_IOS
-            screenPosition = default;
-            if (Input.touchCount <= 0) return false;
-
-            var touch = Input.GetTouch(0);
-            if (touch.phase != TouchPhase.Began) return false;
-            if (IsPointerOverUi(touch.fingerId)) return false;
-
-            screenPosition = touch.position;
-            return true;
+            return TryGetTouchCommandTap(out screenPosition);
 #else
             screenPosition = Input.mousePosition;
             if (!Input.GetMouseButtonDown(0)) return false;
@@ -66,6 +63,39 @@ namespace _Scripts.Camera {
 
             return true;
 #endif
+        }
+
+        /// <summary>
+        /// Gets a completed touch tap for movement commands while rejecting UI touches and camera drags.
+        /// </summary>
+        /// <param name="screenPosition">The completed tap position.</param>
+        /// <returns>True when a movement command tap ended this frame.</returns>
+        private bool TryGetTouchCommandTap(out Vector2 screenPosition) {
+            screenPosition = default;
+
+            if (Input.touchCount != 1) {
+                _isCommandPointerPressActive = false;
+                return false;
+            }
+
+            var touch = Input.GetTouch(0);
+            switch (touch.phase) {
+                case TouchPhase.Began:
+                    _isCommandPointerPressActive = !IsPointerOverUi(touch.fingerId);
+                    _commandPointerStartScreenPosition = touch.position;
+                    return false;
+                case TouchPhase.Ended:
+                    if (!_isCommandPointerPressActive) return false;
+
+                    _isCommandPointerPressActive = false;
+                    screenPosition = touch.position;
+                    return Vector2.Distance(_commandPointerStartScreenPosition, screenPosition) <= CommandTapMovementThreshold;
+                case TouchPhase.Canceled:
+                    _isCommandPointerPressActive = false;
+                    return false;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

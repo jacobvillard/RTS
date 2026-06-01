@@ -17,9 +17,13 @@ namespace _Scripts.GameManagement {
         private readonly List<Unit> _teamAIUnits = new();     // AI-owned units registered in the battle.
         private bool _battleResolved;                         // True once a win/loss/draw has been reported.
         private bool _battleStarted;                          // True once registered units have been released.
+        private Vector2 _commandPointerStartScreenPosition;    // Pointer position where a movement command tap began.
+        private bool _isCommandPointerPressActive;             // True while waiting to confirm a movement command tap.
 
         public Unit SelectedUnit { get; private set; }
         public string winningTeam; 
+
+        private const float CommandTapMovementThreshold = 20f;
 
         #endregion
         #region Unity Methods
@@ -100,6 +104,14 @@ namespace _Scripts.GameManagement {
         }
 
         /// <summary>
+        /// Prepares all registered units for active battle movement.
+        /// </summary>
+        public void PrepareUnitsForBattle() {
+            PrepareUnits(_teamPlayerUnits);
+            PrepareUnits(_teamAIUnits);
+        }
+
+        /// <summary>
         /// Adds a unit to a list once.
         /// </summary>
         /// <param name="units">The target team list.</param>
@@ -107,6 +119,18 @@ namespace _Scripts.GameManagement {
         private static void AddUniqueUnit(List<Unit> units, Unit unit) {
             if (!units.Contains(unit)) {
                 units.Add(unit);
+            }
+        }
+
+        /// <summary>
+        /// Prepares each living unit in a team list for battle.
+        /// </summary>
+        /// <param name="units">The units to prepare.</param>
+        private static void PrepareUnits(List<Unit> units) {
+            foreach (var unit in units) {
+                if (unit == null || !unit.IsAlive) continue;
+
+                unit.PrepareForBattle();
             }
         }
 
@@ -245,7 +269,7 @@ namespace _Scripts.GameManagement {
         /// </summary>
         /// <param name="screenPosition">The valid command screen position.</param>
         /// <returns>True when a command pointer began this frame.</returns>
-        private static bool TryGetCommandScreenPosition(out Vector2 screenPosition) {
+        private bool TryGetCommandScreenPosition(out Vector2 screenPosition) {
 #if UNITY_EDITOR || UNITY_STANDALONE
             screenPosition = Input.mousePosition;
             if (!Input.GetMouseButtonDown(0)) return false;
@@ -253,15 +277,7 @@ namespace _Scripts.GameManagement {
 
             return true;
 #elif UNITY_ANDROID || UNITY_IOS
-            screenPosition = default;
-            if (Input.touchCount <= 0) return false;
-
-            var touch = Input.GetTouch(0);
-            if (touch.phase != TouchPhase.Began) return false;
-            if (IsPointerOverUi(touch.fingerId)) return false;
-
-            screenPosition = touch.position;
-            return true;
+            return TryGetTouchCommandTap(out screenPosition);
 #else
             screenPosition = Input.mousePosition;
             if (!Input.GetMouseButtonDown(0)) return false;
@@ -269,6 +285,39 @@ namespace _Scripts.GameManagement {
 
             return true;
 #endif
+        }
+
+        /// <summary>
+        /// Gets a completed touch tap for movement commands while rejecting UI touches and camera drags.
+        /// </summary>
+        /// <param name="screenPosition">The completed tap position.</param>
+        /// <returns>True when a movement command tap ended this frame.</returns>
+        private bool TryGetTouchCommandTap(out Vector2 screenPosition) {
+            screenPosition = default;
+
+            if (Input.touchCount != 1) {
+                _isCommandPointerPressActive = false;
+                return false;
+            }
+
+            var touch = Input.GetTouch(0);
+            switch (touch.phase) {
+                case TouchPhase.Began:
+                    _isCommandPointerPressActive = !IsPointerOverUi(touch.fingerId);
+                    _commandPointerStartScreenPosition = touch.position;
+                    return false;
+                case TouchPhase.Ended:
+                    if (!_isCommandPointerPressActive) return false;
+
+                    _isCommandPointerPressActive = false;
+                    screenPosition = touch.position;
+                    return Vector2.Distance(_commandPointerStartScreenPosition, screenPosition) <= CommandTapMovementThreshold;
+                case TouchPhase.Canceled:
+                    _isCommandPointerPressActive = false;
+                    return false;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
