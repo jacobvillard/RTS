@@ -16,6 +16,7 @@ namespace _Scripts.GameManagement {
 
         private readonly List<Unit> _teamPlayerUnits = new(); // Player-owned units registered in the battle.
         private readonly List<Unit> _teamAIUnits = new();     // AI-owned units registered in the battle.
+        [SerializeField] private bool debugBattleState;        // Enables verbose battle registration/state logging.
         private bool _battleResolved;                         // True once a win/loss/draw has been reported.
         private bool _battleStarted;                          // True once registered units have been released.
         private Vector2 _commandPointerStartScreenPosition;    // Pointer position where a movement command tap began.
@@ -70,7 +71,9 @@ namespace _Scripts.GameManagement {
             winningTeam = null;
             ClearSelectedUnit();
 
-            Debug.Log($"[BattleDebug] BattleController refreshed for scene '{SceneManager.GetActiveScene().name}'.");
+            if (debugBattleState) {
+                Debug.Log($"[BattleDebug] BattleController refreshed for scene '{SceneManager.GetActiveScene().name}'.");
+            }
         }
 
         #endregion
@@ -130,7 +133,9 @@ namespace _Scripts.GameManagement {
                     throw new ArgumentOutOfRangeException(nameof(team), team, null);
             }
 
-            Debug.Log($"Registered {team} unit '{unit.name}'. Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+            if (debugBattleState) {
+                Debug.Log($"Registered {team} unit '{unit.name}'. Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+            }
         }
 
         /// <summary>
@@ -146,10 +151,12 @@ namespace _Scripts.GameManagement {
         /// Prepares all registered units for active battle movement.
         /// </summary>
         public void PrepareUnitsForBattle() {
-            Debug.Log(
-                $"[BattleDebug] PrepareUnitsForBattle called. " +
-                $"Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}, " +
-                $"GameState: {(GameManager.Instance != null ? GameManager.Instance.GameState.ToString() : "No GameManager")}.");
+            if (debugBattleState) {
+                Debug.Log(
+                    $"[BattleDebug] PrepareUnitsForBattle called. " +
+                    $"Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}, " +
+                    $"GameState: {(GameManager.Instance != null ? GameManager.Instance.GameState.ToString() : "No GameManager")}.");
+            }
 
             PrepareUnits(_teamPlayerUnits);
             PrepareUnits(_teamAIUnits);
@@ -244,7 +251,9 @@ namespace _Scripts.GameManagement {
             if (GameManager.Instance == null || GameManager.Instance.GameState != GameState.Playing) return;
 
             _battleStarted = true;
-            Debug.Log($"Battle started. Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+            if (debugBattleState) {
+                Debug.Log($"Battle started. Player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
+            }
         }
 
         /// <summary>
@@ -296,6 +305,7 @@ namespace _Scripts.GameManagement {
         /// Periodically logs the current battle registration state.
         /// </summary>
         private void LogBattleState() {
+            if (!debugBattleState) return;
             if (Time.time < _nextBattleDebugTime) return;
 
             _nextBattleDebugTime = Time.time + 1f;

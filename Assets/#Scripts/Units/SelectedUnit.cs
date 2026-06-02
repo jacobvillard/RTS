@@ -61,7 +61,6 @@ namespace _Scripts.Units {
         public void SelectUnit() {
             if (_isSelected) return;
 
-            Debug.Log("<color=red>Unit Selected:</color>");
             AudioManager.Instance?.PlayUnitSelected();
             BattleController.Instance.SelectUnit(GetComponentInParent<Unit>());
             _isSelected = true;

@@ -45,6 +45,8 @@ namespace _Scripts.Units {
         [SerializeField] private float aiAssistCallRadius = 3f;     // Distance used by AI units to call nearby allies for help
         [SerializeField] private float aiMusketPathRangeMultiplier = 1.25f; // How much longer than musket range an AI path can be before retreating
         [SerializeField] private float aiMusketRetreatPadding = 2f; // Extra distance AI tries to add when retreating from muskets
+        [Header("Performance")]
+        [SerializeField] private float targetRefreshInterval = 0.15f; // Seconds between expensive target/line-of-sight refreshes.
         private float _attackTimer;                                 // Timer for attack cooldown
         private Unit _currentTarget;                                // The current target unit
         public Vector2 destination;                                 // The destination of the unit
@@ -61,6 +63,10 @@ namespace _Scripts.Units {
         private UnitState _previousState;                           // Keep track of previous state to detect changes
         [SerializeField] private float arrowSpeed = 5f;             // Speed of the arrow
         [SerializeField] private bool debugTargeting;               // Logs target detection and attack decisions for this unit
+#if UNITY_EDITOR
+        [Header("Editor Visualization")]
+        [SerializeField] private bool drawLineOfSightGizmos = true; // Draws attack-range and LOS gizmos when this unit is selected.
+#endif
         private GameObject _targetPosCrossPrefab;                   // The target position cross prefab
         private readonly List<MapTerrainZone> _activeTerrainZones = new();
         private readonly List<MapTerrainZone> _activeForestZones = new();
@@ -71,8 +77,13 @@ namespace _Scripts.Units {
         private float _currentSpeedMultiplier = 1f;
         private bool _isFollowingManualMoveCommand;                // True while obeying a player-issued movement command
         private bool _wasInPreGame;                                // True while this unit was last synced during setup
+        private float _nextTargetRefreshTime;                      // Next time this unit can rebuild target data.
         private float _nextTargetDebugTime;                        // Next time targeting debug can print for this unit
         private string _lastTargetDebugMessage;                    // Last targeting debug line used for throttling
+        private readonly RaycastHit2D[] _lineOfSightHits = new RaycastHit2D[12]; // Reused raycast buffer to avoid combat allocations.
+#if UNITY_EDITOR
+        private readonly RaycastHit2D[] _gizmoLineOfSightHits = new RaycastHit2D[12]; // Editor-only LOS visualizer buffer.
+#endif
         public bool IsInForest => _activeForestZones.Count > 0;
         
         
@@ -218,9 +229,8 @@ namespace _Scripts.Units {
             destination = transform.position;
             _isFollowingManualMoveCommand = false;
             _wasInPreGame = false;
-            Debug.Log(
-                $"[BattleDebug][TargetDebug:{name}] Prepared for battle. Team={team}, Type={unitType}, " +
-                $"AgentEnabled={(_agent != null && _agent.enabled)}, Position={transform.position}.");
+            LogTargeting(
+                $"prepared for battle. AgentEnabled={(_agent != null && _agent.enabled)}, Position={transform.position}.");
         }
         
         #endregion
@@ -237,8 +247,7 @@ namespace _Scripts.Units {
             }
 
             EnsureReadyForActiveGame();
-            RefreshTargetUnits();   // Refresh the list of target units
-            UpdateCurrentTarget();  // Update the current target
+            RefreshTargetingIfNeeded();
             TryAttack();            // Attempt to attack
             StateManagement();      // Manage the state of the unit
             FixZedPos();            // Fix Z position
@@ -389,6 +398,17 @@ namespace _Scripts.Units {
         #region Targeting
         
         /// <summary>
+        /// Refreshes expensive target data on a short interval instead of every frame.
+        /// </summary>
+        private void RefreshTargetingIfNeeded() {
+            if (Time.time < _nextTargetRefreshTime) return;
+
+            _nextTargetRefreshTime = Time.time + Mathf.Max(0.02f, targetRefreshInterval);
+            RefreshTargetUnits();
+            UpdateCurrentTarget();
+        }
+
+        /// <summary>
         /// Updates _targetUnits by collecting all opposing units
         /// within a certain distance, angle, etc.
         /// </summary>
@@ -496,8 +516,10 @@ namespace _Scripts.Units {
             var distance = Vector2.Distance(start, end);
             if (distance <= Mathf.Epsilon) return true;
 
-            var hits = Physics2D.RaycastAll(start, end - start, distance);
-            foreach (var hit in hits) {
+            var direction = (end - start).normalized;
+            var hitCount = Physics2D.RaycastNonAlloc(start, direction, _lineOfSightHits, distance);
+            for (var i = 0; i < hitCount; i++) {
+                var hit = _lineOfSightHits[i];
                 if (!IsLineOfSightBlocker(hit.collider)) continue;
 
                 LogTargeting($"LOS blocked by '{hit.collider.gameObject.name}' on layer '{LayerMask.LayerToName(hit.collider.gameObject.layer)}'.");
@@ -521,7 +543,71 @@ namespace _Scripts.Units {
 
             return true;
         }
-    
+        #endregion
+        #region Editor Visualization
+
+#if UNITY_EDITOR
+
+        /// <summary>
+        /// Draws editor-only attack range and line-of-sight rays for visual debugging.
+        /// </summary>
+        private void OnDrawGizmosSelected() {
+            if (!drawLineOfSightGizmos) return;
+
+            DrawAttackRangeGizmo();
+            if (!Application.isPlaying || BattleController.Instance == null) return;
+
+            var opposingUnits = BattleController.Instance.GetOpposingUnits(team);
+            foreach (var candidate in opposingUnits) {
+                if (candidate == null || candidate == this || !candidate.IsAlive) continue;
+
+                var distance = Vector2.Distance(transform.position, candidate.transform.position);
+                if (distance > attackRange) continue;
+
+                DrawLineOfSightGizmo(candidate);
+            }
+        }
+
+        /// <summary>
+        /// Draws the unit's configured attack range.
+        /// </summary>
+        private void DrawAttackRangeGizmo() {
+            Gizmos.color = new Color(1f, 1f, 1f, 0.2f);
+            Gizmos.DrawWireSphere(transform.position, attackRange);
+        }
+
+        /// <summary>
+        /// Draws a green ray when LOS is clear, or red to the first blocking collider.
+        /// </summary>
+        /// <param name="target">The target unit being checked.</param>
+        private void DrawLineOfSightGizmo(Unit target) {
+            Vector2 start = transform.position;
+            Vector2 end = target.transform.position;
+            var distance = Vector2.Distance(start, end);
+            if (distance <= Mathf.Epsilon) return;
+
+            var direction = (end - start).normalized;
+            var hitCount = Physics2D.RaycastNonAlloc(start, direction, _gizmoLineOfSightHits, distance);
+            for (var i = 0; i < hitCount; i++) {
+                var hit = _gizmoLineOfSightHits[i];
+                if (!IsLineOfSightBlocker(hit.collider)) continue;
+
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine(start, hit.point);
+                Gizmos.DrawWireSphere(hit.point, 0.12f);
+
+                Gizmos.color = new Color(1f, 0f, 0f, 0.25f);
+                Gizmos.DrawLine(hit.point, end);
+                return;
+            }
+
+            Gizmos.color = target == _currentTarget
+                ? Color.yellow
+                : Color.green;
+            Gizmos.DrawLine(start, end);
+            Gizmos.DrawWireSphere(end, 0.08f);
+        }
+#endif
         #endregion
         #region Movement
         
@@ -530,7 +616,7 @@ namespace _Scripts.Units {
         /// </summary>
         /// <param name="targetPosition"></param>
         public void SetDestination(Vector2 targetPosition) {
-            Debug.Log("Setting destination to: " + targetPosition);
+            LogTargeting("setting destination to: " + targetPosition);
             
             // OverlapSphere in 3D, OverlapCircle in 2D:
             // ReSharper disable once Unity.PreferNonAllocApi
@@ -842,7 +928,7 @@ namespace _Scripts.Units {
                 return;
             }
 
-            UpdateCurrentTarget();
+            RefreshTargetingIfNeeded();
             if (_currentTarget == null || !IsValidTarget(_currentTarget)) {
                 LogTargeting("musket did not fire: no valid current target.");
                 return;
@@ -969,7 +1055,8 @@ namespace _Scripts.Units {
         }
 
         private void LogTargeting(string message) {
-            if (!debugTargeting && Time.time < _nextTargetDebugTime && message == _lastTargetDebugMessage) return;
+            if (!debugTargeting) return;
+            if (Time.time < _nextTargetDebugTime && message == _lastTargetDebugMessage) return;
 
             _lastTargetDebugMessage = message;
             _nextTargetDebugTime = Time.time + 1f;

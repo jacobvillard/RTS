@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: Archers
   m_EditorClassIdentifier: 
   unitType: 1
+  icon: {fileID: 21300000, guid: b63ce664793883b42915bba58b08af71, type: 3}
   health: 100
   moveSpeed: 0.5
   attackRange: 5
-  attackDamage: 5
-  attackCooldown: 3
-  icon: {fileID: 21300000, guid: b63ce664793883b42915bba58b08af71, type: 3}
+  attackDamage: 3
+  attackCooldown: 4
+  aiAssistCallRadius: 3
+  aiMusketPathRangeMultiplier: 1.25
+  aiMusketRetreatPadding: 2
