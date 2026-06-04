@@ -1,0 +1,1348 @@
+fileFormatVersion: 2
+guid: 3ac2b1ef23750a847a7d377da9daf9f6
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ObjectTreeGroups_2
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 547
+        width: 25
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 821a65699e6a1744eabe7b00e3deeb1d
+      internalID: -220573479
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_3
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 513
+        width: 54
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a6b030d2360bf2c49a1bda633c0c652c
+      internalID: -728351721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_5
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 512
+        width: 64
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cc4de3a71e011dd43b711db17d313779
+      internalID: 1853461109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_6
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 514
+        width: 55
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c2e82350f744c248a9e739d22c1fb94
+      internalID: -1192814025
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_7
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 517
+        width: 55
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f16463eee7f39f94ca8005780be37d28
+      internalID: -2023908527
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_11
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 512
+        width: 29
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9f3eda3005dc5f244845ad5e8d817eb9
+      internalID: -1617343447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_15
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 489
+        width: 10
+        height: 13
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8c19bb1408f4b04b97ccba8dc47b99e
+      internalID: 1608693904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_17
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 451
+        width: 29
+        height: 61
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f6ac8c7293e02fa4893e89eafac2189c
+      internalID: -1184365331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_18
+      rect:
+        serializedVersion: 2
+        x: 129
+        y: 449
+        width: 65
+        height: 61
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b55321b694239f40961d449ea831717
+      internalID: -1085922180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_20
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 449
+        width: 58
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 416c95e5db5fe8e44a9225dd37eb2bfe
+      internalID: -1019434562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_24
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 469
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a9553e87c7cf3a34f8c827a0fd3a1cfd
+      internalID: 286589402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_29
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 452
+        width: 10
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fc69178e05c39e6478d17ad953409289
+      internalID: -1177937851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_38
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 322
+        width: 65
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4df257b7885aa9f45ab9d631b727acd3
+      internalID: -2037032482
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_39
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 319
+        width: 126
+        height: 129
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f3ba229ccb4e73343aafe2070b5decd1
+      internalID: -1515635248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_41
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 419
+        width: 32
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bd6080ee9ee8c394c94595d7369cc9bf
+      internalID: -873444967
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_44
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 416
+        width: 20
+        height: 21
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 561e587b730c43a4ea21a27118d6f3b7
+      internalID: 1476583665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_46
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 384
+        width: 59
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5f340c1c975b25840888a1e982481fa4
+      internalID: -415902112
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_50
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 320
+        width: 124
+        height: 63
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5f9ff6762e7af274cbb67af18d13fdf2
+      internalID: -134086633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_59
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 261
+        width: 60
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2061a5901d2771843ba9509390752e4e
+      internalID: 15595589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_60
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 191
+        width: 62
+        height: 127
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60459953100b04b44879de32a9abc3b5
+      internalID: -853294015
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_75
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 192
+        width: 120
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ace1d43070cfa884ba3881a3e5ceb1f6
+      internalID: -618870532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_98
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 171
+        width: 16
+        height: 21
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 633a2901ffb690e439818b16dab1de45
+      internalID: 2123722091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_99
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 161
+        width: 26
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c7c81344cf6a6034ba910ddb9a6bd8f3
+      internalID: 1595808438
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_100
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 163
+        width: 17
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f093055abf98e2a48a71150e211563f6
+      internalID: -544446430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_101
+      rect:
+        serializedVersion: 2
+        x: 242
+        y: 164
+        width: 27
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4c50763645241a54eabfef6d155573a9
+      internalID: 1870091367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_102
+      rect:
+        serializedVersion: 2
+        x: 274
+        y: 162
+        width: 19
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fb27cd78a8edb7f49b7b1572aa8aaf27
+      internalID: 1678819078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_103
+      rect:
+        serializedVersion: 2
+        x: 298
+        y: 169
+        width: 11
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6b904ee48ca7f2441abad042f8e65ffe
+      internalID: -775277476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_134
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 33
+        width: 116
+        height: 63
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f9232f4e3f523374fa8be04944c6cce5
+      internalID: -1599664185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_143
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 33
+        width: 25
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 470779bd16bc5c74db4252ab81577bac
+      internalID: 1883317716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_151
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 9
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c97cf30ccb4f3084b815574ff1675332
+      internalID: 770377536
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_152
+      rect:
+        serializedVersion: 2
+        x: 164
+        y: 4
+        width: 22
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2b7b4c2f95b2fe14fa1d9a049bdd068c
+      internalID: 1202097025
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_153
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 3
+        width: 17
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aba7f9879ba27124a94ea25dd9e59013
+      internalID: 1890099020
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_154
+      rect:
+        serializedVersion: 2
+        x: 242
+        y: 4
+        width: 27
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a0fed728051cc364ea854ec8810707b6
+      internalID: 1009879596
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_155
+      rect:
+        serializedVersion: 2
+        x: 274
+        y: 2
+        width: 19
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 619c5b31a440b544cad64fe9a835f5f2
+      internalID: -1724680126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_156
+      rect:
+        serializedVersion: 2
+        x: 298
+        y: 9
+        width: 11
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 80fe652929c56f34fa7c62fbc9d580fc
+      internalID: 987887717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_9
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 508
+        width: 32
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 553f37dd051ac4741a8ee7c12b378d8b
+      internalID: 47701518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_0
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 550
+        width: 26
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 09a7f1fd517a9f64785018f81d8cca3b
+      internalID: -1283570913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_1
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 451
+        width: 28
+        height: 56
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1873b0ae6230fd4a9ab5de29198eb25
+      internalID: 1866708324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_4
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 451
+        width: 59
+        height: 55
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 65b8eb01a9a0df94c9215b099de76dee
+      internalID: -1596136815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_8
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 449
+        width: 21
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0b493918bc975fa4b833759d0fbbf161
+      internalID: 2079415956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_10
+      rect:
+        serializedVersion: 2
+        x: 275
+        y: 474
+        width: 45
+        height: 42
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 68885e9119e39e541b156ed183147fa2
+      internalID: -949738942
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_12
+      rect:
+        serializedVersion: 2
+        x: 268
+        y: 417
+        width: 47
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d2127422058afef4e9dae5a50d8a3898
+      internalID: 347002191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_13
+      rect:
+        serializedVersion: 2
+        x: 266
+        y: 383
+        width: 54
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2e1f2fb800b9feb498e614eee84a6420
+      internalID: -747930511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_14
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 160
+        width: 132
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4814ca3f8d489cc40a7a518aa746c7c5
+      internalID: -1964763518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_16
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 257
+        width: 58
+        height: 61
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: abcb812905a884d488ff214d09726f54
+      internalID: -73153919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_19
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 32
+        width: 64
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bfd9789f6f2ea7042b7bec2d5b4b7ef6
+      internalID: -91894027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_21
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 98
+        width: 62
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ce726b13b4ef6674aa1405674f81b09b
+      internalID: 1777472477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_22
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 97
+        width: 59
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bcf0cb19ae13afa41a61c9e3a2a1ec37
+      internalID: -1224393794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_23
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 79
+        width: 7
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 52ac24d53a4b5ba44ac3e7b8fc7dd65b
+      internalID: 359882174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ObjectTreeGroups_25
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 3
+        width: 130
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7efa277bbb0b80f4a953de2872885ebc
+      internalID: -1755577741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      ObjectTreeGroups_0: -1283570913
+      ObjectTreeGroups_1: 1866708324
+      ObjectTreeGroups_10: -949738942
+      ObjectTreeGroups_100: -544446430
+      ObjectTreeGroups_101: 1870091367
+      ObjectTreeGroups_102: 1678819078
+      ObjectTreeGroups_103: -775277476
+      ObjectTreeGroups_104: 1285577954
+      ObjectTreeGroups_105: -986931424
+      ObjectTreeGroups_106: -582276133
+      ObjectTreeGroups_107: 801756502
+      ObjectTreeGroups_108: -998028485
+      ObjectTreeGroups_109: 80168758
+      ObjectTreeGroups_11: -1617343447
+      ObjectTreeGroups_110: 1437275386
+      ObjectTreeGroups_111: 1966998717
+      ObjectTreeGroups_112: -906954810
+      ObjectTreeGroups_113: 1428234717
+      ObjectTreeGroups_114: -1696125475
+      ObjectTreeGroups_115: 1628355718
+      ObjectTreeGroups_116: 1849710243
+      ObjectTreeGroups_117: -1295195989
+      ObjectTreeGroups_118: -464175614
+      ObjectTreeGroups_119: -833119855
+      ObjectTreeGroups_12: 347002191
+      ObjectTreeGroups_120: 1625632229
+      ObjectTreeGroups_121: -2133692035
+      ObjectTreeGroups_122: 1008909677
+      ObjectTreeGroups_123: -937549230
+      ObjectTreeGroups_124: 1990190125
+      ObjectTreeGroups_125: -2124626717
+      ObjectTreeGroups_126: -308712569
+      ObjectTreeGroups_127: -534340739
+      ObjectTreeGroups_128: -1284723139
+      ObjectTreeGroups_129: -508711716
+      ObjectTreeGroups_13: -747930511
+      ObjectTreeGroups_130: 1419525061
+      ObjectTreeGroups_131: 447021094
+      ObjectTreeGroups_132: 60084348
+      ObjectTreeGroups_133: -357904970
+      ObjectTreeGroups_134: -1599664185
+      ObjectTreeGroups_135: -1250767941
+      ObjectTreeGroups_136: -1479206930
+      ObjectTreeGroups_137: 1756444957
+      ObjectTreeGroups_138: 1871252493
+      ObjectTreeGroups_139: 724793818
+      ObjectTreeGroups_14: -1964763518
+      ObjectTreeGroups_140: 1353599321
+      ObjectTreeGroups_141: 1060631020
+      ObjectTreeGroups_142: -661195834
+      ObjectTreeGroups_143: 1883317716
+      ObjectTreeGroups_144: 1474893413
+      ObjectTreeGroups_145: -2029200490
+      ObjectTreeGroups_146: 2070739615
+      ObjectTreeGroups_147: -1266679198
+      ObjectTreeGroups_148: -1616117742
+      ObjectTreeGroups_149: 1783030936
+      ObjectTreeGroups_15: 1608693904
+      ObjectTreeGroups_150: -136631770
+      ObjectTreeGroups_151: 770377536
+      ObjectTreeGroups_152: 1202097025
+      ObjectTreeGroups_153: 1890099020
+      ObjectTreeGroups_154: 1009879596
+      ObjectTreeGroups_155: -1724680126
+      ObjectTreeGroups_156: 987887717
+      ObjectTreeGroups_157: 236337150
+      ObjectTreeGroups_16: -73153919
+      ObjectTreeGroups_17: -1184365331
+      ObjectTreeGroups_18: -1085922180
+      ObjectTreeGroups_19: -91894027
+      ObjectTreeGroups_2: -220573479
+      ObjectTreeGroups_20: -1019434562
+      ObjectTreeGroups_21: 1777472477
+      ObjectTreeGroups_22: -1224393794
+      ObjectTreeGroups_23: 359882174
+      ObjectTreeGroups_24: 286589402
+      ObjectTreeGroups_25: -1755577741
+      ObjectTreeGroups_26: -1640482652
+      ObjectTreeGroups_27: -1710758410
+      ObjectTreeGroups_28: 1123377456
+      ObjectTreeGroups_29: -1177937851
+      ObjectTreeGroups_3: -728351721
+      ObjectTreeGroups_30: -498027345
+      ObjectTreeGroups_31: 2065074999
+      ObjectTreeGroups_32: -1529484983
+      ObjectTreeGroups_33: -2076193815
+      ObjectTreeGroups_34: 1944919905
+      ObjectTreeGroups_35: 1931150636
+      ObjectTreeGroups_36: -1577657770
+      ObjectTreeGroups_37: -242509107
+      ObjectTreeGroups_38: -2037032482
+      ObjectTreeGroups_39: -1515635248
+      ObjectTreeGroups_4: -1596136815
+      ObjectTreeGroups_40: -80736338
+      ObjectTreeGroups_41: -873444967
+      ObjectTreeGroups_42: -1826267617
+      ObjectTreeGroups_43: 1253497666
+      ObjectTreeGroups_44: 1476583665
+      ObjectTreeGroups_45: -1518459107
+      ObjectTreeGroups_46: -415902112
+      ObjectTreeGroups_47: 378264339
+      ObjectTreeGroups_48: 574226994
+      ObjectTreeGroups_49: -460626593
+      ObjectTreeGroups_5: 1853461109
+      ObjectTreeGroups_50: -134086633
+      ObjectTreeGroups_51: 795340622
+      ObjectTreeGroups_52: 764094802
+      ObjectTreeGroups_53: 699109586
+      ObjectTreeGroups_54: -1860378573
+      ObjectTreeGroups_55: 1989137389
+      ObjectTreeGroups_56: -618671240
+      ObjectTreeGroups_57: -1825792278
+      ObjectTreeGroups_58: -1224245291
+      ObjectTreeGroups_59: 15595589
+      ObjectTreeGroups_6: -1192814025
+      ObjectTreeGroups_60: -853294015
+      ObjectTreeGroups_61: 471375651
+      ObjectTreeGroups_62: -413750648
+      ObjectTreeGroups_63: -346043880
+      ObjectTreeGroups_64: 1265833924
+      ObjectTreeGroups_65: -1022990552
+      ObjectTreeGroups_66: 176470081
+      ObjectTreeGroups_67: -192558645
+      ObjectTreeGroups_68: 98247583
+      ObjectTreeGroups_69: 1555397195
+      ObjectTreeGroups_7: -2023908527
+      ObjectTreeGroups_70: -545951802
+      ObjectTreeGroups_71: -2040623470
+      ObjectTreeGroups_72: 2106441603
+      ObjectTreeGroups_73: 1742354250
+      ObjectTreeGroups_74: 159292620
+      ObjectTreeGroups_75: -618870532
+      ObjectTreeGroups_76: 99505490
+      ObjectTreeGroups_77: 878947366
+      ObjectTreeGroups_78: 393368319
+      ObjectTreeGroups_79: 132191527
+      ObjectTreeGroups_8: 2079415956
+      ObjectTreeGroups_80: -1258977795
+      ObjectTreeGroups_81: -862257039
+      ObjectTreeGroups_82: -811279797
+      ObjectTreeGroups_83: 933680530
+      ObjectTreeGroups_84: 1475397714
+      ObjectTreeGroups_85: 674436734
+      ObjectTreeGroups_86: 376356504
+      ObjectTreeGroups_87: 464186602
+      ObjectTreeGroups_88: -921581894
+      ObjectTreeGroups_89: 1527634315
+      ObjectTreeGroups_9: 47701518
+      ObjectTreeGroups_90: 1576205777
+      ObjectTreeGroups_91: 781108584
+      ObjectTreeGroups_92: 199094463
+      ObjectTreeGroups_93: -258695710
+      ObjectTreeGroups_94: -1040059589
+      ObjectTreeGroups_95: 342775573
+      ObjectTreeGroups_96: 1673213586
+      ObjectTreeGroups_97: 1741906495
+      ObjectTreeGroups_98: 2123722091
+      ObjectTreeGroups_99: 1595808438
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -63,6 +63,11 @@ namespace _Scripts.Units {
         private UnitState _previousState;                           // Keep track of previous state to detect changes
         [SerializeField] private float arrowSpeed = 5f;             // Speed of the arrow
         [SerializeField] private bool debugTargeting;               // Logs target detection and attack decisions for this unit
+        [Header("Musket Behaviour")]
+        [SerializeField] private float musketVisionConeAngle = 70f; // Total cone angle muskets can fire within.
+        [SerializeField] private float musketTurnSpeed = 40f;       // Degrees per second used when rotating toward a musket target.
+        [SerializeField] private float musketForwardAngleOffset = 90f; // Local visual forward offset from Rigidbody2D right.
+        [SerializeField] private bool requireMusketTargetInCone = true; // Requires muskets to face targets before firing.
 #if UNITY_EDITOR
         [Header("Editor Visualization")]
         [SerializeField] private bool drawLineOfSightGizmos = true; // Draws attack-range and LOS gizmos when this unit is selected.
@@ -79,6 +84,7 @@ namespace _Scripts.Units {
         private bool _wasInPreGame;                                // True while this unit was last synced during setup
         private float _nextTargetRefreshTime;                      // Next time this unit can rebuild target data.
         private float _nextTargetDebugTime;                        // Next time targeting debug can print for this unit
+        private float _musketFacingAngle;                          // Desired musket aim angle applied during the physics step.
         private string _lastTargetDebugMessage;                    // Last targeting debug line used for throttling
         private readonly RaycastHit2D[] _lineOfSightHits = new RaycastHit2D[12]; // Reused raycast buffer to avoid combat allocations.
 #if UNITY_EDITOR
@@ -97,6 +103,7 @@ namespace _Scripts.Units {
 
             ConfigureRigidbody2D();
             _agent = GetComponent<NavMeshAgent>();
+            ConfigureNavMeshAgent();
 
             if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) {
                 SetAgentActive(false);
@@ -142,17 +149,27 @@ namespace _Scripts.Units {
 
         private void Start() {
             _agent ??= GetComponent<NavMeshAgent>();
-            _agent.updatePosition = _rigidbody2D == null;
-            _agent.updateRotation = false;
-            _agent.updateUpAxis = false;
+            ConfigureNavMeshAgent();
             _wasInPreGame = GameManager.Instance != null && GameManager.Instance.IsPreGame();
             SetAgentActive(!_wasInPreGame);
             SyncAgentToTransform();
             UpdateStoppingDistance();
             UpdateAgentSpeed();
+            SetMusketFacingFromTransform();
             
             _holdPosition = new Vector2(transform.position.x,transform.position.y) ;
             
+        }
+
+        /// <summary>
+        /// Keeps NavMeshAgent pathing separate from Rigidbody2D movement and rotation.
+        /// </summary>
+        private void ConfigureNavMeshAgent() {
+            if (_agent == null) return;
+
+            _agent.updatePosition = _rigidbody2D == null;
+            _agent.updateRotation = false;
+            _agent.updateUpAxis = false;
         }
 
         /// <summary>
@@ -165,6 +182,15 @@ namespace _Scripts.Units {
             if (_agent.enabled == active) return;
 
             _agent.enabled = active;
+        }
+
+        /// <summary>
+        /// Initializes musket aim from the placed unit rotation.
+        /// </summary>
+        private void SetMusketFacingFromTransform() {
+            if (unitType != UnitType.Ranged) return;
+
+            _musketFacingAngle = GetBodyAngleForForwardDirection(GetDefaultMusketForwardDirection());
         }
 
         /// <summary>
@@ -195,6 +221,7 @@ namespace _Scripts.Units {
             aiMusketRetreatPadding = type.aiMusketRetreatPadding;
             this.team = teamInit;
             UpdateStoppingDistance();
+            SetMusketFacingFromTransform();
         }
 
 
@@ -248,6 +275,7 @@ namespace _Scripts.Units {
 
             EnsureReadyForActiveGame();
             RefreshTargetingIfNeeded();
+            UpdateMusketFacing();
             TryAttack();            // Attempt to attack
             StateManagement();      // Manage the state of the unit
             FixZedPos();            // Fix Z position
@@ -269,6 +297,7 @@ namespace _Scripts.Units {
                 _agent.speed * Time.fixedDeltaTime);
 
             _rigidbody2D.MovePosition(nextPosition);
+            ApplyMusketBodyRotation();
             _agent.nextPosition = new Vector3(nextPosition.x, nextPosition.y, transform.position.z);
         }
 
@@ -452,6 +481,7 @@ namespace _Scripts.Units {
             }
             
             if(closest == null) {
+                _currentTarget = null;
                 LogTargeting($"no current target selected. Valid target list count: {targetUnits.Count}.");
                 return;
             }
@@ -489,6 +519,118 @@ namespace _Scripts.Units {
 
             LogTargeting($"candidate '{candidate.name}' valid at distance {distance:0.00}.");
             return true;
+        }
+
+        /// <summary>
+        /// Checks whether a target sits inside this musket's forward firing cone.
+        /// </summary>
+        /// <param name="target">The unit to check.</param>
+        /// <returns>True when the target is inside the configured cone.</returns>
+        private bool IsTargetInsideMusketCone(Unit target) {
+            if (!requireMusketTargetInCone || unitType != UnitType.Ranged) return true;
+            if (target == null) return false;
+
+            var toTarget = ((Vector2)target.transform.position - (Vector2)transform.position).normalized;
+            if (toTarget == Vector2.zero) return true;
+
+            var angle = Vector2.Angle(GetMusketForward(), toTarget);
+            return angle <= musketVisionConeAngle * 0.5f;
+        }
+
+        /// <summary>
+        /// Gets the resting direction for a musket team.
+        /// </summary>
+        /// <returns>Up for player muskets and down for AI muskets.</returns>
+        private Vector2 GetDefaultMusketForwardDirection() {
+            return team == Team.Player ? Vector2.up : Vector2.down;
+        }
+
+        /// <summary>
+        /// Converts a forward direction into the body angle needed by Rigidbody2D.
+        /// </summary>
+        /// <param name="direction">The direction the musket should face.</param>
+        /// <returns>The body Z rotation in degrees.</returns>
+        private float GetBodyAngleForForwardDirection(Vector2 direction) {
+            return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - musketForwardAngleOffset;
+        }
+
+        /// <summary>
+        /// Gets the current musket aim direction without using the physics body's rotation.
+        /// </summary>
+        /// <returns>The musket forward direction using the configured local forward offset.</returns>
+        private Vector2 GetMusketForward() {
+            var radians = (_musketFacingAngle + musketForwardAngleOffset) * Mathf.Deg2Rad;
+            return new Vector2(Mathf.Cos(radians), Mathf.Sin(radians));
+        }
+
+        /// <summary>
+        /// Rotates muskets toward their current target using the configured local forward offset.
+        /// </summary>
+        private void UpdateMusketFacing() {
+            if (unitType != UnitType.Ranged) return;
+
+            if (_currentTarget != null && _currentTarget.IsAlive && CanSeeUnit(_currentTarget) && HasLineOfSight(_currentTarget)) {
+                RotateMusketTowards(_currentTarget.transform.position);
+                return;
+            }
+
+            RotateMusketTowardsTargetPoint();
+        }
+
+        /// <summary>
+        /// Aims at the current movement/hold point when no enemy is available.
+        /// </summary>
+        private void RotateMusketTowardsTargetPoint() {
+            var targetPoint = _isFollowingManualMoveCommand || cState == UnitState.Advance
+                ? destination
+                : _holdPosition;
+
+            if (Vector2.Distance(transform.position, targetPoint) <= MinimumStoppingDistance) {
+                RotateMusketTowardsDefaultFacing();
+                return;
+            }
+
+            RotateMusketTowards(targetPoint);
+        }
+
+        /// <summary>
+        /// Smoothly returns the musket to its team-facing default direction.
+        /// </summary>
+        private void RotateMusketTowardsDefaultFacing() {
+            _musketFacingAngle = Mathf.MoveTowardsAngle(
+                _musketFacingAngle,
+                GetBodyAngleForForwardDirection(GetDefaultMusketForwardDirection()),
+                musketTurnSpeed * Time.deltaTime);
+
+            if (_rigidbody2D == null) {
+                transform.rotation = Quaternion.Euler(0f, 0f, _musketFacingAngle);
+            }
+        }
+
+        /// <summary>
+        /// Rotates musket aim so the configured local forward points toward the supplied world position.
+        /// </summary>
+        /// <param name="targetPosition">The position to face.</param>
+        private void RotateMusketTowards(Vector3 targetPosition) {
+            var direction = (Vector2)targetPosition - (Vector2)transform.position;
+            if (direction.sqrMagnitude <= Mathf.Epsilon) return;
+
+            var targetAngle = GetBodyAngleForForwardDirection(direction.normalized);
+            _musketFacingAngle = Mathf.MoveTowardsAngle(_musketFacingAngle, targetAngle, musketTurnSpeed * Time.deltaTime);
+            if (_rigidbody2D == null) {
+                transform.rotation = Quaternion.Euler(0f, 0f, _musketFacingAngle);
+            }
+        }
+
+        /// <summary>
+        /// Applies musket aim through Rigidbody2D so collision rotation stays inside the physics step.
+        /// </summary>
+        private void ApplyMusketBodyRotation() {
+            if (unitType != UnitType.Ranged) return;
+            if (_rigidbody2D == null) return;
+
+            _rigidbody2D.MoveRotation(_musketFacingAngle);
+            _rigidbody2D.angularVelocity = 0f;
         }
 
         private bool CanSeeUnit(Unit target) {
@@ -574,6 +716,26 @@ namespace _Scripts.Units {
         private void DrawAttackRangeGizmo() {
             Gizmos.color = new Color(1f, 1f, 1f, 0.2f);
             Gizmos.DrawWireSphere(transform.position, attackRange);
+
+            if (unitType != UnitType.Ranged || !requireMusketTargetInCone) return;
+
+            DrawMusketConeGizmo();
+        }
+
+        /// <summary>
+        /// Draws the configured musket cone using the configured local forward offset.
+        /// </summary>
+        private void DrawMusketConeGizmo() {
+            var halfAngle = musketVisionConeAngle * 0.5f;
+            var forward = Application.isPlaying
+                ? GetMusketForward()
+                : (Vector2)(Quaternion.Euler(0f, 0f, musketForwardAngleOffset) * transform.right);
+            var leftDirection = Quaternion.Euler(0f, 0f, halfAngle) * forward;
+            var rightDirection = Quaternion.Euler(0f, 0f, -halfAngle) * forward;
+
+            Gizmos.color = new Color(1f, 0.85f, 0.1f, 0.65f);
+            Gizmos.DrawLine(transform.position, transform.position + leftDirection * attackRange);
+            Gizmos.DrawLine(transform.position, transform.position + rightDirection * attackRange);
         }
 
         /// <summary>
@@ -931,6 +1093,12 @@ namespace _Scripts.Units {
             RefreshTargetingIfNeeded();
             if (_currentTarget == null || !IsValidTarget(_currentTarget)) {
                 LogTargeting("musket did not fire: no valid current target.");
+                return;
+            }
+
+            RotateMusketTowards(_currentTarget.transform.position);
+            if (!IsTargetInsideMusketCone(_currentTarget)) {
+                LogTargeting($"musket did not fire: target '{_currentTarget.name}' outside firing cone.");
                 return;
             }
 

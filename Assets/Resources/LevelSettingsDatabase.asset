@@ -16,125 +16,402 @@ MonoBehaviour:
   fallbackCameraOrthographicSize: 20
   levels:
   - sceneName: 1
+    levelName: Green Hollow
     startMoney: 220
     cameraOrthographicSize: 6
-  - sceneName: 1
-    startMoney: 220
-    cameraOrthographicSize: 6
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 2
+    levelName: 
     startMoney: 400
     cameraOrthographicSize: 6
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 3
+    levelName: 
     startMoney: 400
     cameraOrthographicSize: 6
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 4
+    levelName: 
     startMoney: 800
     cameraOrthographicSize: 6
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 5
+    levelName: 
     startMoney: 300
     cameraOrthographicSize: 10
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 6
+    levelName: 
     startMoney: 800
     cameraOrthographicSize: 6
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 7
+    levelName: 
     startMoney: 400
     cameraOrthographicSize: 6
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 8
+    levelName: 
     startMoney: 900
     cameraOrthographicSize: 7.4
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 9
+    levelName: 
     startMoney: 1100
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 10
+    levelName: 
     startMoney: 1100
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 11
+    levelName: 
     startMoney: 1200
     cameraOrthographicSize: 9.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 12
+    levelName: 
     startMoney: 1500
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 13
+    levelName: 
     startMoney: 1300
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 14
+    levelName: 
     startMoney: 1600
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 15
+    levelName: 
     startMoney: 1700
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 16
+    levelName: 
     startMoney: 1700
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 17
+    levelName: 
     startMoney: 1800
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 18
+    levelName: 
     startMoney: 1900
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 19
+    levelName: 
     startMoney: 1950
     cameraOrthographicSize: 10.2
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 20
+    levelName: 
     startMoney: 2000
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 21
+    levelName: 
     startMoney: 1400
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 22
+    levelName: 
     startMoney: 1600
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 23
+    levelName: 
     startMoney: 1400
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 24
+    levelName: 
     startMoney: 1100
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 25
+    levelName: 
     startMoney: 1500
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 26
+    levelName: 
     startMoney: 2000
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 27
+    levelName: 
     startMoney: 1300
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 28
+    levelName: 
     startMoney: 2000
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 29
+    levelName: 
     startMoney: 1200
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 30
+    levelName: 
     startMoney: 1800
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 31
+    levelName: 
     startMoney: 1050
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 32
+    levelName: 
     startMoney: 1000
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 33
+    levelName: 
     startMoney: 1100
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 34
+    levelName: 
     startMoney: 1150
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 35
+    levelName: 
     startMoney: 1300
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 36
+    levelName: 
     startMoney: 1220
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 37
+    levelName: 
     startMoney: 1350
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 38
+    levelName: 
     startMoney: 990
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 39
+    levelName: 
     startMoney: 1200
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0
   - sceneName: 40
+    levelName: 
     startMoney: 1550
     cameraOrthographicSize: 12.25
+    officer: 0
+    Scout: 0
+    Pikemen: 0
+    Skirmishers: 0
+    Grenadiers: 0
+    Bannermen: 0

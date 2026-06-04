@@ -20,12 +20,25 @@ namespace _Scripts.GameManagement {
 
             [Header("Scene")]
             public string sceneName; // Scene name this row applies to.
+            
+            [Header("LevelName")]
+            public string levelName; // Optional display name for the level.
 
             [Header("Budget")]
             public int startMoney = 220; // Starting money for unit placement.
 
             [Header("Camera")]
             public float cameraOrthographicSize = 20f; // Starting orthographic size for the main camera.
+
+            [Header("Available Units")] 
+            public bool officer;
+            public bool Scout;
+            public bool Pikemen;
+            public bool Skirmishers;
+            public bool Grenadiers;
+            public bool Bannermen;
+
+
         }
 
         #endregion
