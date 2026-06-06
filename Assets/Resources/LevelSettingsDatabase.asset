@@ -26,8 +26,8 @@ MonoBehaviour:
     Grenadiers: 0
     Bannermen: 0
   - sceneName: 2
-    levelName: 
-    startMoney: 400
+    levelName: 'Broken Line '
+    startMoney: 350
     cameraOrthographicSize: 6
     officer: 0
     Scout: 0
@@ -36,8 +36,8 @@ MonoBehaviour:
     Grenadiers: 0
     Bannermen: 0
   - sceneName: 3
-    levelName: 
-    startMoney: 400
+    levelName: 'Saint Clara Field '
+    startMoney: 250
     cameraOrthographicSize: 6
     officer: 0
     Scout: 0
@@ -46,8 +46,8 @@ MonoBehaviour:
     Grenadiers: 0
     Bannermen: 0
   - sceneName: 4
-    levelName: 
-    startMoney: 800
+    levelName: Miller's Farm
+    startMoney: 500
     cameraOrthographicSize: 6
     officer: 0
     Scout: 0
@@ -56,9 +56,9 @@ MonoBehaviour:
     Grenadiers: 0
     Bannermen: 0
   - sceneName: 5
-    levelName: 
-    startMoney: 300
-    cameraOrthographicSize: 10
+    levelName: Foxwood Gate
+    startMoney: 500
+    cameraOrthographicSize: 6
     officer: 0
     Scout: 0
     Pikemen: 0

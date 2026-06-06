@@ -38,7 +38,15 @@ namespace _Scripts.Units {
             RefreshDisplay();
         }
 
+        private void OnEnable() {
+            RefreshDisplay();
+        }
+
         private void Update() {
+            RefreshDisplay();
+        }
+
+        private void LateUpdate() {
             RefreshDisplay();
         }
 
@@ -70,12 +78,15 @@ namespace _Scripts.Units {
         /// Updates visibility and text from the battle controller selection.
         /// </summary>
         private void RefreshDisplay() {
+            if (!CanShowStats()) {
+                HideStats();
+                return;
+            }
+
             var selectedUnit = BattleController.Instance != null ? BattleController.Instance.SelectedUnit : null;
             var hasSelectedUnit = selectedUnit != null && selectedUnit.IsAlive;
 
-            if (statsParent != null && statsParent.activeSelf != hasSelectedUnit) {
-                statsParent.SetActive(hasSelectedUnit);
-            }
+            SetStatsParentActive(hasSelectedUnit);
 
             if (!hasSelectedUnit) {
                 _lastSelectedUnit = null;
@@ -93,6 +104,23 @@ namespace _Scripts.Units {
 
             UpdateActualSpeed(selectedUnit);
             UpdateStatsText(selectedUnit);
+        }
+
+        /// <summary>
+        /// Checks whether stats are allowed to be visible in the current game state.
+        /// </summary>
+        /// <returns>True only during active battle play.</returns>
+        private static bool CanShowStats() {
+            return GameManager.Instance != null && GameManager.Instance.GameState == GameState.Playing;
+        }
+
+        /// <summary>
+        /// Hides the stats panel and clears display sampling state.
+        /// </summary>
+        private void HideStats() {
+            SetStatsParentActive(false);
+            _lastSelectedUnit = null;
+            ResetSpeed();
         }
 
         /// <summary>
@@ -139,6 +167,16 @@ namespace _Scripts.Units {
             _sampleTimer = 0f;
             _measuredSpeed = 0f;
             _displayedSpeed = 0f;
+        }
+
+        /// <summary>
+        /// Toggles the stats parent when assigned.
+        /// </summary>
+        /// <param name="isActive">Whether the stats parent should be visible.</param>
+        private void SetStatsParentActive(bool isActive) {
+            if (statsParent != null && statsParent.activeSelf != isActive) {
+                statsParent.SetActive(isActive);
+            }
         }
 
         /// <summary>

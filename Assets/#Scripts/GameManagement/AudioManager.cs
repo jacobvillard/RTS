@@ -245,7 +245,7 @@ namespace _Scripts.GameManagement {
         /// <param name="unitType">The unit class making the hit.</param>
         /// <param name="owner">The unit or component that emitted the sound.</param>
         public void PlayMeleeHit(Vector3 position, UnitType unitType, Component owner) {
-            var clip = unitType == UnitType.Cavalry
+            var clip = unitType == UnitType.Cavalry || unitType == UnitType.Dragoon
                 ? GetRandomClip(cavalryHitSounds, meleeHitSounds)
                 : GetRandomClip(meleeHitSounds);
 
@@ -283,7 +283,7 @@ namespace _Scripts.GameManagement {
         /// <param name="position">The death position.</param>
         /// <param name="unitType">The dying unit class.</param>
         public void PlayUnitDeath(Vector3 position, UnitType unitType) {
-            var clip = unitType == UnitType.Cavalry
+            var clip = unitType == UnitType.Cavalry || unitType == UnitType.Dragoon
                 ? GetRandomClip(cavalryDeathSounds, unitDeathSounds)
                 : GetRandomClip(unitDeathSounds);
 

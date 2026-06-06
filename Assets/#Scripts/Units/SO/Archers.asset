@@ -19,6 +19,7 @@ MonoBehaviour:
   attackRange: 5
   attackDamage: 3
   attackCooldown: 4
+  canDismount: 0
   aiAssistCallRadius: 3
   aiMusketPathRangeMultiplier: 1.25
   aiMusketRetreatPadding: 2

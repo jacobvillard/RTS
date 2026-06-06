@@ -13,7 +13,7 @@ namespace _Scripts.Units {
         [Header("Visuals")]
         [SerializeField] private GameObject outline; // Selection/hover outline object.
 
-        private bool _isSelected; // True while this unit is actively selected.
+        protected bool _isSelected; // True while this unit is actively selected.
         public bool isDead;       // Prevents selection visuals after death.
 
         #endregion
@@ -58,7 +58,7 @@ namespace _Scripts.Units {
         /// <summary>
         /// Selects this unit through the battle controller.
         /// </summary>
-        public void SelectUnit() {
+        public virtual void SelectUnit() {
             if (_isSelected) return;
 
             AudioManager.Instance?.PlayUnitSelected();
@@ -69,7 +69,7 @@ namespace _Scripts.Units {
         /// <summary>
         /// Deselects this unit and hides its outline.
         /// </summary>
-        public void DeselectUnit() {
+        public virtual void DeselectUnit() {
             if (outline != null) {
                 outline.SetActive(false);
             }

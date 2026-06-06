@@ -249,6 +249,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outline: {fileID: 6957093038722251944}
+  isDead: 0
 --- !u!1001 &4728342311835340744
 PrefabInstance:
   m_ObjectHideFlags: 0

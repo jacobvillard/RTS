@@ -44,6 +44,7 @@ namespace _Scripts.Units {
 
             var otherUnit = other.GetComponent<Unit>();
             if (otherUnit == null || otherUnit.team == _unit.team) return;
+            if (!_unit.CanTargetForCombat(otherUnit)) return;
 
             if (!_unit.targetUnits.Contains(otherUnit)) {
                 _unit.targetUnits.Add(otherUnit);

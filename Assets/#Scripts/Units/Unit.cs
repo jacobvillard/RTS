@@ -10,7 +10,7 @@ namespace _Scripts.Units {
     /// <summary>
     /// The type of unit in the game.
     /// </summary>
-    public enum UnitType { Infantry, Ranged, Cavalry }
+    public enum UnitType { Infantry, Ranged, Cavalry, Officer, Scout, Pikemen, Skirmisher, Dragoon, Bannerman }
     
     /// <summary>
     /// The team of the unit in the game.
@@ -20,7 +20,7 @@ namespace _Scripts.Units {
     /// <summary>
     /// The state of the unit in the game.
     /// </summary>
-    public enum UnitState { Hold, Advance, Charge, Desert }
+    public enum UnitState { Hold, Advance, Charge, Follow, Desert }
 
 
     /// <summary>
@@ -36,11 +36,17 @@ namespace _Scripts.Units {
         public List<Unit> targetUnits = new ();                     // List of target units
         [SerializeField]private UnitState cState;                   // Current state of the unit
         [SerializeField]private float health = 100;                 // The health of the unit
+        [SerializeField]private float maxHealth = 100;              // The maximum health for healing caps.
         [SerializeField]private float moveSpeed = 1f;               // The move speed of the unit
         [SerializeField]private float attackRange = 1f;             // The attack range of the unit
         [SerializeField]private float attackDamage = 20;            // The attack damage to the unit
         [SerializeField]private float attackCooldown = 1f;          // The attack cooldown of the unit
         [SerializeField] private float angularDrag = 8f;            // How quickly collision spin settles after impact
+        [Header("Role Behaviour")]
+        [SerializeField] private bool canDismount = true;           // Allows Dragoons to swap to infantry-style fighting on contact.
+        [SerializeField] private float followStoppingDistance = 0.8f; // Distance kept from an officer/leader while following.
+        [SerializeField] private GameObject playerDismountedPrefab; // Prefab spawned when a player Dragoon dismounts.
+        [SerializeField] private GameObject aiDismountedPrefab;     // Prefab spawned when an AI Dragoon dismounts.
         [Header("AI Response")]
         [SerializeField] private float aiAssistCallRadius = 3f;     // Distance used by AI units to call nearby allies for help
         [SerializeField] private float aiMusketPathRangeMultiplier = 1.25f; // How much longer than musket range an AI path can be before retreating
@@ -49,11 +55,13 @@ namespace _Scripts.Units {
         [SerializeField] private float targetRefreshInterval = 0.15f; // Seconds between expensive target/line-of-sight refreshes.
         private float _attackTimer;                                 // Timer for attack cooldown
         private Unit _currentTarget;                                // The current target unit
+        private Unit _followTarget;                                 // Friendly unit this unit should follow.
         public Vector2 destination;                                 // The destination of the unit
         public bool IsAlive => health > 0;                          // Is the unit alive?
         public UnitType ClassType => unitType;                      // The unit class used by UI and combat rules
         public float CurrentHealth => Mathf.Max(health, 0f);        // Current health clamped for UI display
-        public float CalculatedMoveSpeed => moveSpeed * _currentSpeedMultiplier; // Current speed after terrain modifiers
+        public float MaxHealth => maxHealth;                        // Maximum health exposed for healing/capture logic.
+        public float CalculatedMoveSpeed => moveSpeed * _currentSpeedMultiplier * _strategicMoveSpeedMultiplier; // Current speed after terrain modifiers
         public float AttackRange => attackRange;                    // Attack range exposed for AI response checks
         [SerializeField] private SpriteRenderer spriteRenderer;     // Main sprite renderer
         [SerializeField] private SpriteRenderer childSpriteRenderer;// Child sprite renderer 
@@ -66,21 +74,29 @@ namespace _Scripts.Units {
         [Header("Musket Behaviour")]
         [SerializeField] private float musketVisionConeAngle = 70f; // Total cone angle muskets can fire within.
         [SerializeField] private float musketTurnSpeed = 40f;       // Degrees per second used when rotating toward a musket target.
-        [SerializeField] private float musketForwardAngleOffset = 90f; // Local visual forward offset from Rigidbody2D right.
+        [SerializeField] private float playerMusketForwardAngleOffset = 90f; // Player barrel direction from Rigidbody2D right.
+        [SerializeField] private float aiMusketForwardAngleOffset = 90f;     // AI barrel direction from Rigidbody2D right.
         [SerializeField] private bool requireMusketTargetInCone = true; // Requires muskets to face targets before firing.
 #if UNITY_EDITOR
         [Header("Editor Visualization")]
         [SerializeField] private bool drawLineOfSightGizmos = true; // Draws attack-range and LOS gizmos when this unit is selected.
 #endif
         private GameObject _targetPosCrossPrefab;                   // The target position cross prefab
-        private readonly List<MapTerrainZone> _activeTerrainZones = new();
-        private readonly List<MapTerrainZone> _activeForestZones = new();
+        private readonly List<IMapTerrainEffect> _activeTerrainZones = new();
+        private readonly List<IMapTerrainEffect> _activeForestZones = new();
         private const float MinimumStoppingDistance = 0.55f;
         private const float NavMeshStartSampleRadius = 2f;
         private const string PlaceableLayerName = "Placeable";
         private const string NoCollisionLayerName = "NoCol";
         private float _currentSpeedMultiplier = 1f;
+        private float _damageBoostMultiplier = 1f;                  // Temporary damage multiplier from banners/buildings.
+        private float _strategicMoveSpeedMultiplier = 1f;           // Team-wide speed multiplier from captured objectives.
+        private float _strategicAttackRateMultiplier = 1f;          // Team-wide attack-rate multiplier from captured objectives.
+        private float _moraleBoostUntil;                           // Time until morale icon should remain active.
+        private float _strategicBuffUntil;                          // Time until strategic buff icon should remain active.
+        private float _healingUntil;                                // Time until healing icon should remain active.
         private bool _isFollowingManualMoveCommand;                // True while obeying a player-issued movement command
+        private bool _isDragoonDismounted;                         // True after a Dragoon has entered infantry fighting mode.
         private bool _wasInPreGame;                                // True while this unit was last synced during setup
         private float _nextTargetRefreshTime;                      // Next time this unit can rebuild target data.
         private float _nextTargetDebugTime;                        // Next time targeting debug can print for this unit
@@ -91,6 +107,9 @@ namespace _Scripts.Units {
         private readonly RaycastHit2D[] _gizmoLineOfSightHits = new RaycastHit2D[12]; // Editor-only LOS visualizer buffer.
 #endif
         public bool IsInForest => _activeForestZones.Count > 0;
+        public bool HasMoraleBoost => _moraleBoostUntil > 0f && Time.time <= _moraleBoostUntil;
+        public bool HasStrategicBuff => _strategicBuffUntil > 0f && Time.time <= _strategicBuffUntil;
+        public bool IsBeingHealed => _healingUntil > 0f && Time.time <= _healingUntil;
         
         
         #endregion
@@ -188,7 +207,7 @@ namespace _Scripts.Units {
         /// Initializes musket aim from the placed unit rotation.
         /// </summary>
         private void SetMusketFacingFromTransform() {
-            if (unitType != UnitType.Ranged) return;
+            if (!IsRangedUnit()) return;
 
             _musketFacingAngle = GetBodyAngleForForwardDirection(GetDefaultMusketForwardDirection());
         }
@@ -209,13 +228,17 @@ namespace _Scripts.Units {
         /// <param name="teamInit"></param>
         public void Initialize(UnitSO type, Team teamInit) {
             unitType = type.unitType;
-            health = type.health; 
+            health = type.health;
+            maxHealth = type.health;
             moveSpeed = type.moveSpeed;
             attackRange = type.attackRange;
             attackDamage = teamInit == Team.Player
                 ? type.attackDamage * 0.99f 
                 : type.attackDamage;
             attackCooldown = type.attackCooldown;
+            canDismount = type.canDismount;
+            playerDismountedPrefab = type.playerDismountedPrefab;
+            aiDismountedPrefab = type.aiDismountedPrefab;
             aiAssistCallRadius = type.aiAssistCallRadius;
             aiMusketPathRangeMultiplier = type.aiMusketPathRangeMultiplier;
             aiMusketRetreatPadding = type.aiMusketRetreatPadding;
@@ -227,7 +250,7 @@ namespace _Scripts.Units {
 
         
 
-        public void EnterTerrainZone(MapTerrainZone terrainZone) {
+        public void EnterTerrainZone(IMapTerrainEffect terrainZone) {
             if (terrainZone == null || _activeTerrainZones.Contains(terrainZone)) return;
 
             _activeTerrainZones.Add(terrainZone);
@@ -238,7 +261,7 @@ namespace _Scripts.Units {
             UpdateAgentSpeed();
         }
 
-        public void ExitTerrainZone(MapTerrainZone terrainZone) {
+        public void ExitTerrainZone(IMapTerrainEffect terrainZone) {
             if (terrainZone == null) return;
 
             _activeTerrainZones.Remove(terrainZone);
@@ -358,6 +381,9 @@ namespace _Scripts.Units {
                 case UnitState.Charge:
                     Charge();
                     break;
+                case UnitState.Follow:
+                    Follow();
+                    break;
                 case UnitState.Desert:
                     break;
                 default:
@@ -414,12 +440,98 @@ namespace _Scripts.Units {
                 UpdateStoppingDistance();
             }
 
-            if (_currentTarget != null && _currentTarget.IsAlive) {
+            if (_currentTarget != null && _currentTarget.IsAlive && CanContinueChasingTarget(_currentTarget)) {
                 MoveTowards(_currentTarget.transform.position);
             }
             else {
-                _currentTarget = BattleController.Instance.FindClosestTarget(this, team);
+                ClearCurrentTarget();
+                _currentTarget = FindClosestCombatTarget();
             }
+        }
+
+        /// <summary>
+        /// Checks whether this unit is still allowed to chase its current target.
+        /// </summary>
+        /// <param name="target">The target being chased.</param>
+        /// <returns>True when the target remains visible or already engaged.</returns>
+        private bool CanContinueChasingTarget(Unit target) {
+            if (target == null || !target.IsAlive) return false;
+            if (IsAlreadyEngagedWith(target)) return true;
+
+            return CanSeeUnit(target) && HasLineOfSight(target);
+        }
+
+        /// <summary>
+        /// Clears the current target from focused and cached target state.
+        /// </summary>
+        private void ClearCurrentTarget() {
+            if (_currentTarget != null) {
+                targetUnits.Remove(_currentTarget);
+            }
+
+            _currentTarget = null;
+        }
+
+        /// <summary>
+        /// Follows a friendly leader while keeping a small spacing buffer.
+        /// </summary>
+        private void Follow() {
+            if (_followTarget == null || !_followTarget.IsAlive) {
+                SetState(UnitState.Hold);
+                return;
+            }
+
+            if (Vector2.Distance(transform.position, _followTarget.transform.position) <= followStoppingDistance) {
+                MoveTowards(transform.position);
+                return;
+            }
+
+            MoveTowards(_followTarget.transform.position);
+        }
+
+        /// <summary>
+        /// Orders this unit to hold its current position.
+        /// </summary>
+        public void CommandHold() {
+            _isFollowingManualMoveCommand = false;
+            _followTarget = null;
+            SyncHoldPosition();
+            SetState(UnitState.Hold);
+        }
+
+        /// <summary>
+        /// Orders this unit to advance to a supplied world position.
+        /// </summary>
+        /// <param name="targetPosition">The position to move toward.</param>
+        public void CommandAdvance(Vector2 targetPosition) {
+            destination = targetPosition;
+            _isFollowingManualMoveCommand = false;
+            _followTarget = null;
+            UpdateStoppingDistance();
+            SetState(UnitState.Advance);
+        }
+
+        /// <summary>
+        /// Orders this unit to follow a friendly leader.
+        /// </summary>
+        /// <param name="leader">The unit to follow.</param>
+        public void CommandFollow(Unit leader) {
+            if (leader == null || leader == this || leader.team != team) return;
+
+            _isFollowingManualMoveCommand = false;
+            _followTarget = leader;
+            UpdateStoppingDistance();
+            SetState(UnitState.Follow);
+        }
+
+        /// <summary>
+        /// Orders this unit to attack a specific target.
+        /// </summary>
+        /// <param name="target">The enemy target.</param>
+        public void CommandAttack(Unit target) {
+            if (target == null || !target.IsAlive || target.team == team) return;
+
+            TryAttackSpecificUnit(target);
         }
         
 
@@ -490,6 +602,15 @@ namespace _Scripts.Units {
             LogTargeting($"current target set to '{_currentTarget.name}'.");
         }
 
+        /// <summary>
+        /// Checks whether another unit can be considered a valid combat target right now.
+        /// </summary>
+        /// <param name="candidate">Potential opposing unit.</param>
+        /// <returns>True when the unit is alive, in range, visible, and unobstructed.</returns>
+        public bool CanTargetForCombat(Unit candidate) {
+            return IsValidTarget(candidate);
+        }
+
         private bool IsValidTarget(Unit candidate) {
             if (candidate == null) {
                 LogTargeting("candidate rejected: null.");
@@ -522,12 +643,61 @@ namespace _Scripts.Units {
         }
 
         /// <summary>
+        /// Finds the closest enemy this unit can currently see, ignoring attack range.
+        /// </summary>
+        /// <returns>The closest visible enemy, or null.</returns>
+        public Unit FindClosestVisibleEnemy() {
+            if (BattleController.Instance == null) return null;
+
+            Unit closest = null;
+            var closestDistance = Mathf.Infinity;
+            var opposingUnits = BattleController.Instance.GetOpposingUnits(team);
+
+            foreach (var candidate in opposingUnits) {
+                if (candidate == null || !candidate.IsAlive) continue;
+                if (!CanSeeUnit(candidate) || !HasLineOfSight(candidate)) continue;
+
+                var distance = Vector2.Distance(transform.position, candidate.transform.position);
+                if (distance >= closestDistance) continue;
+
+                closestDistance = distance;
+                closest = candidate;
+            }
+
+            return closest;
+        }
+
+        /// <summary>
+        /// Finds the closest enemy currently valid for normal combat retargeting.
+        /// </summary>
+        /// <returns>The closest in-range visible enemy, or null.</returns>
+        private Unit FindClosestCombatTarget() {
+            if (BattleController.Instance == null) return null;
+
+            Unit closest = null;
+            var closestDistance = Mathf.Infinity;
+            var opposingUnits = BattleController.Instance.GetOpposingUnits(team);
+
+            foreach (var candidate in opposingUnits) {
+                if (!IsValidTarget(candidate)) continue;
+
+                var distance = Vector2.Distance(transform.position, candidate.transform.position);
+                if (distance >= closestDistance) continue;
+
+                closestDistance = distance;
+                closest = candidate;
+            }
+
+            return closest;
+        }
+
+        /// <summary>
         /// Checks whether a target sits inside this musket's forward firing cone.
         /// </summary>
         /// <param name="target">The unit to check.</param>
         /// <returns>True when the target is inside the configured cone.</returns>
         private bool IsTargetInsideMusketCone(Unit target) {
-            if (!requireMusketTargetInCone || unitType != UnitType.Ranged) return true;
+            if (!requireMusketTargetInCone || !IsRangedUnit()) return true;
             if (target == null) return false;
 
             var toTarget = ((Vector2)target.transform.position - (Vector2)transform.position).normalized;
@@ -551,7 +721,17 @@ namespace _Scripts.Units {
         /// <param name="direction">The direction the musket should face.</param>
         /// <returns>The body Z rotation in degrees.</returns>
         private float GetBodyAngleForForwardDirection(Vector2 direction) {
-            return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - musketForwardAngleOffset;
+            return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - GetMusketForwardAngleOffset();
+        }
+
+        /// <summary>
+        /// Gets the local visual forward offset for this team.
+        /// </summary>
+        /// <returns>The local barrel angle measured from Rigidbody2D right.</returns>
+        private float GetMusketForwardAngleOffset() {
+            return team == Team.Player
+                ? playerMusketForwardAngleOffset
+                : aiMusketForwardAngleOffset;
         }
 
         /// <summary>
@@ -559,7 +739,7 @@ namespace _Scripts.Units {
         /// </summary>
         /// <returns>The musket forward direction using the configured local forward offset.</returns>
         private Vector2 GetMusketForward() {
-            var radians = (_musketFacingAngle + musketForwardAngleOffset) * Mathf.Deg2Rad;
+            var radians = (_musketFacingAngle + GetMusketForwardAngleOffset()) * Mathf.Deg2Rad;
             return new Vector2(Mathf.Cos(radians), Mathf.Sin(radians));
         }
 
@@ -567,7 +747,7 @@ namespace _Scripts.Units {
         /// Rotates muskets toward their current target using the configured local forward offset.
         /// </summary>
         private void UpdateMusketFacing() {
-            if (unitType != UnitType.Ranged) return;
+            if (!IsRangedUnit()) return;
 
             if (_currentTarget != null && _currentTarget.IsAlive && CanSeeUnit(_currentTarget) && HasLineOfSight(_currentTarget)) {
                 RotateMusketTowards(_currentTarget.transform.position);
@@ -586,11 +766,26 @@ namespace _Scripts.Units {
                 : _holdPosition;
 
             if (Vector2.Distance(transform.position, targetPoint) <= MinimumStoppingDistance) {
-                RotateMusketTowardsDefaultFacing();
+                RotateMusketTowardsTargetDirection(targetPoint);
                 return;
             }
 
             RotateMusketTowards(targetPoint);
+        }
+
+        /// <summary>
+        /// Keeps ranged units facing toward their destination direction after arriving.
+        /// </summary>
+        /// <param name="targetPoint">The point the unit was travelling toward.</param>
+        private void RotateMusketTowardsTargetDirection(Vector2 targetPoint) {
+            var direction = targetPoint - (Vector2)transform.position;
+            if (direction.sqrMagnitude <= 0.0001f) return;
+
+            var targetAngle = GetBodyAngleForForwardDirection(direction.normalized);
+            _musketFacingAngle = Mathf.MoveTowardsAngle(_musketFacingAngle, targetAngle, musketTurnSpeed * Time.deltaTime);
+            if (_rigidbody2D == null) {
+                transform.rotation = Quaternion.Euler(0f, 0f, _musketFacingAngle);
+            }
         }
 
         /// <summary>
@@ -626,22 +821,58 @@ namespace _Scripts.Units {
         /// Applies musket aim through Rigidbody2D so collision rotation stays inside the physics step.
         /// </summary>
         private void ApplyMusketBodyRotation() {
-            if (unitType != UnitType.Ranged) return;
+            if (!IsRangedUnit()) return;
             if (_rigidbody2D == null) return;
 
             _rigidbody2D.MoveRotation(_musketFacingAngle);
             _rigidbody2D.angularVelocity = 0f;
         }
 
+        /// <summary>
+        /// Checks forest concealment before line-of-sight rules are applied.
+        /// </summary>
+        /// <param name="target">The target unit to test.</param>
+        /// <returns>True when forest concealment allows visibility.</returns>
         private bool CanSeeUnit(Unit target) {
+            if (target == null) return false;
+            if (IsAlreadyEngagedWith(target)) return true;
             if (!target.IsInForest) return true;
-            if (!IsInForest) return false;
+
+            return SharesForestAreaWith(target);
+        }
+
+        /// <summary>
+        /// Checks whether two units occupy the same forest hiding area.
+        /// </summary>
+        /// <param name="target">Target unit to compare against.</param>
+        /// <returns>True when both units are in the same forest patch.</returns>
+        private bool SharesForestAreaWith(Unit target) {
+            if (target == null || !IsInForest || !target.IsInForest) return false;
 
             foreach (var forestZone in _activeForestZones) {
-                if (target._activeForestZones.Contains(forestZone)) return true;
+                if (forestZone == null || !target._activeForestZones.Contains(forestZone)) continue;
+
+                if (forestZone is TilemapForestZone tilemapForestZone) {
+                    var ownAreaId = tilemapForestZone.GetForestAreaId(this);
+                    var targetAreaId = tilemapForestZone.GetForestAreaId(target);
+                    if (ownAreaId >= 0 && ownAreaId == targetAreaId) return true;
+
+                    continue;
+                }
+
+                return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Checks whether two units are already actively fighting each other.
+        /// </summary>
+        /// <param name="target">The other unit.</param>
+        /// <returns>True when either unit has the other as its current target.</returns>
+        private bool IsAlreadyEngagedWith(Unit target) {
+            return target != null && (_currentTarget == target || target._currentTarget == this);
         }
         
         /// <summary>
@@ -680,6 +911,7 @@ namespace _Scripts.Units {
             if (collider == null || collider.isTrigger || collider.gameObject == gameObject) return false;
             if (collider.GetComponentInParent<Unit>() != null) return false;
             if (collider.GetComponentInParent<MapTerrainZone>() != null) return false;
+            if (collider.GetComponentInParent<TilemapForestZone>() != null) return false;
             if (collider.gameObject.layer == LayerMask.NameToLayer(PlaceableLayerName)) return false;
             if (collider.gameObject.layer == LayerMask.NameToLayer(NoCollisionLayerName)) return false;
 
@@ -717,7 +949,7 @@ namespace _Scripts.Units {
             Gizmos.color = new Color(1f, 1f, 1f, 0.2f);
             Gizmos.DrawWireSphere(transform.position, attackRange);
 
-            if (unitType != UnitType.Ranged || !requireMusketTargetInCone) return;
+            if (!IsRangedUnit() || !requireMusketTargetInCone) return;
 
             DrawMusketConeGizmo();
         }
@@ -729,7 +961,7 @@ namespace _Scripts.Units {
             var halfAngle = musketVisionConeAngle * 0.5f;
             var forward = Application.isPlaying
                 ? GetMusketForward()
-                : (Vector2)(Quaternion.Euler(0f, 0f, musketForwardAngleOffset) * transform.right);
+                : (Vector2)(Quaternion.Euler(0f, 0f, GetMusketForwardAngleOffset()) * transform.right);
             var leftDirection = Quaternion.Euler(0f, 0f, halfAngle) * forward;
             var rightDirection = Quaternion.Euler(0f, 0f, -halfAngle) * forward;
 
@@ -890,7 +1122,7 @@ namespace _Scripts.Units {
                 return;
             }
 
-            _agent.stoppingDistance = unitType == UnitType.Ranged
+            _agent.stoppingDistance = IsRangedUnit()
                 ? Mathf.Max(MinimumStoppingDistance, attackRange * 0.8f)
                 : Mathf.Max(MinimumStoppingDistance, attackRange * 0.7f);
         }
@@ -914,7 +1146,7 @@ namespace _Scripts.Units {
             }
 
             if (_agent != null) {
-                _agent.speed = moveSpeed * _currentSpeedMultiplier;
+                _agent.speed = moveSpeed * _currentSpeedMultiplier * _strategicMoveSpeedMultiplier;
             }
         }
         
@@ -931,7 +1163,7 @@ namespace _Scripts.Units {
             AudioManager.Instance?.PlayAiAlert(transform.position, this);
             CallNearbyAiUnits(attacker);
 
-            if (attacker.ClassType == UnitType.Ranged) {
+            if (attacker.IsRangedUnit()) {
                 RespondToMusketAttack(attacker);
                 return;
             }
@@ -977,6 +1209,8 @@ namespace _Scripts.Units {
         private void TryAttackSpecificUnit(Unit attacker) {
             if (attacker == null || !attacker.IsAlive) return;
             if (IsFightingDifferentUnit(attacker)) return;
+            if (!CanSeeUnit(attacker) && !IsAlreadyEngagedWith(attacker)) return;
+            if (!HasLineOfSight(attacker) && !IsAlreadyEngagedWith(attacker)) return;
 
             _currentTarget = attacker;
             if (!targetUnits.Contains(attacker)) {
@@ -1063,12 +1297,13 @@ namespace _Scripts.Units {
         /// </summary>
         private void TryAttack() {
             _attackTimer += Time.deltaTime;
-            if (_attackTimer >= attackCooldown) {
+            var adjustedCooldown = attackCooldown / Mathf.Max(0.01f, _strategicAttackRateMultiplier);
+            if (_attackTimer >= adjustedCooldown) {
                 _attackTimer = 0f;
                 LogTargeting($"attack cooldown ready. Targets available: {targetUnits.Count}. Current target: {(_currentTarget != null ? _currentTarget.name : "none")}");
                 
                 
-                if (unitType == UnitType.Ranged) {
+                if (IsRangedUnit()) {
                     FireMusketAtClosestTarget();
                 }
                 else {
@@ -1085,11 +1320,6 @@ namespace _Scripts.Units {
         }
 
         private void FireMusketAtClosestTarget() {
-            if (team == Team.Player && IsInForest) {
-                LogTargeting("musket did not fire: player ranged unit is inside forest.");
-                return;
-            }
-
             RefreshTargetingIfNeeded();
             if (_currentTarget == null || !IsValidTarget(_currentTarget)) {
                 LogTargeting("musket did not fire: no valid current target.");
@@ -1111,8 +1341,19 @@ namespace _Scripts.Units {
             if (shooter == null || !IsAlive) return;
             TakeDamage(damage, shooter);
         }
+
+        /// <summary>
+        /// Applies damage that does not come from a normal unit attacker.
+        /// </summary>
+        /// <param name="damage">Damage to apply.</param>
+        public void ApplyDirectDamage(float damage) {
+            if (!IsAlive) return;
+
+            TakeDamage(damage);
+        }
         
         private void DamageUnit(Unit target) {
+            DismountDragoonIfNeeded(target);
             var damage = CalculateDamage(target);
             LogTargeting($"damaging '{target.name}' for {damage:0.00}.");
             AudioManager.Instance?.PlayMeleeHit(target.transform.position, unitType, this);
@@ -1138,6 +1379,49 @@ namespace _Scripts.Units {
             }
 
             HandleAiAttackResponse(attacker);
+        }
+
+        /// <summary>
+        /// Applies a temporary damage multiplier from aura/building effects.
+        /// </summary>
+        /// <param name="multiplier">The final damage multiplier.</param>
+        public void SetDamageBoostMultiplier(float multiplier) {
+            _damageBoostMultiplier = Mathf.Max(0f, multiplier);
+            _moraleBoostUntil = _damageBoostMultiplier > 1f
+                ? Time.time + 0.35f
+                : 0f;
+        }
+
+        /// <summary>
+        /// Applies team-wide strategic buffs from captured objectives.
+        /// </summary>
+        /// <param name="moveSpeedMultiplier">Multiplier applied to movement speed.</param>
+        /// <param name="attackRateMultiplier">Multiplier applied to attack/reload rate.</param>
+        public void SetStrategicBuffs(float moveSpeedMultiplier, float attackRateMultiplier) {
+            _strategicMoveSpeedMultiplier = Mathf.Max(0.01f, moveSpeedMultiplier);
+            _strategicAttackRateMultiplier = Mathf.Max(0.01f, attackRateMultiplier);
+            _strategicBuffUntil = _strategicMoveSpeedMultiplier > 1f || _strategicAttackRateMultiplier > 1f
+                ? Time.time + 0.8f
+                : 0f;
+            UpdateAgentSpeed();
+        }
+
+        /// <summary>
+        /// Heals this unit without exceeding the supplied health cap.
+        /// </summary>
+        /// <param name="amount">Health restored this tick.</param>
+        /// <param name="maximumHealth">The highest health this heal can reach.</param>
+        public void Heal(float amount, float maximumHealth) {
+            if (!IsAlive) return;
+
+            maximumHealth = Mathf.Max(0f, maximumHealth);
+            if (health >= maximumHealth) return;
+
+            var previousHealth = health;
+            health = Mathf.Min(maximumHealth, health + Mathf.Max(0f, amount));
+            if (health > previousHealth) {
+                _healingUntil = Time.time + 0.35f;
+            }
         }
         
         /// <summary>
@@ -1211,15 +1495,96 @@ namespace _Scripts.Units {
             // For simplicity, let's say if you have the advantage, double damage.
             var hasAdvantage = false;
 
-            switch (unitType) {
-                case UnitType.Infantry when enemy.unitType == UnitType.Ranged:
-                case UnitType.Ranged when enemy.unitType == UnitType.Cavalry:
-                case UnitType.Cavalry when enemy.unitType == UnitType.Infantry:
+            var attackerType = GetEffectiveCombatType();
+            var defenderType = enemy.GetEffectiveCombatType();
+
+            switch (attackerType) {
+                case UnitType.Infantry when defenderType == UnitType.Ranged:
+                case UnitType.Pikemen when defenderType == UnitType.Cavalry:
+                case UnitType.Pikemen when defenderType == UnitType.Dragoon:
+                case UnitType.Ranged when defenderType == UnitType.Cavalry:
+                case UnitType.Skirmisher when defenderType == UnitType.Cavalry:
+                case UnitType.Cavalry when defenderType == UnitType.Infantry:
+                case UnitType.Dragoon when defenderType == UnitType.Infantry:
                     hasAdvantage = true;
                     break;
             }
 
-            return hasAdvantage ? attackDamage * 2f : attackDamage;
+            var damage = hasAdvantage ? attackDamage * 2f : attackDamage;
+            return damage * _damageBoostMultiplier;
+        }
+
+        /// <summary>
+        /// Checks whether this unit uses musket-style ranged behaviour.
+        /// </summary>
+        /// <returns>True for muskets and skirmishers.</returns>
+        public bool IsRangedUnit() {
+            return unitType == UnitType.Ranged || unitType == UnitType.Skirmisher;
+        }
+
+        /// <summary>
+        /// Gets this unit's combat type after special role conversion.
+        /// </summary>
+        /// <returns>The type used for advantage checks.</returns>
+        private UnitType GetEffectiveCombatType() {
+            return unitType == UnitType.Dragoon && _isDragoonDismounted
+                ? UnitType.Infantry
+                : unitType;
+        }
+
+        /// <summary>
+        /// Converts Dragoons to infantry-style fighting once they reach an enemy.
+        /// </summary>
+        /// <param name="target">The enemy in contact.</param>
+        private void DismountDragoonIfNeeded(Unit target) {
+            if (unitType != UnitType.Dragoon || _isDragoonDismounted || !canDismount || target == null) return;
+            if (Vector2.Distance(transform.position, target.transform.position) > attackRange) return;
+
+            _isDragoonDismounted = true;
+            var dismountedPrefab = team == Team.Player
+                ? playerDismountedPrefab
+                : aiDismountedPrefab;
+
+            if (dismountedPrefab != null) {
+                StartCoroutine(ReplaceWithDismountedUnit(dismountedPrefab));
+                return;
+            }
+
+            UpdateStoppingDistance();
+        }
+
+        /// <summary>
+        /// Replaces this Dragoon with a dismounted unit prefab.
+        /// </summary>
+        /// <param name="dismountedPrefab">Prefab to spawn.</param>
+        /// <returns>Coroutine enumerator.</returns>
+        private IEnumerator ReplaceWithDismountedUnit(GameObject dismountedPrefab) {
+            var replacement = Instantiate(dismountedPrefab, transform.position, transform.rotation);
+            var replacementUnit = replacement.GetComponent<Unit>();
+            var attempts = 0;
+
+            while (replacementUnit == null && attempts < 3) {
+                attempts++;
+                yield return null;
+                replacementUnit = replacement.GetComponent<Unit>();
+            }
+
+            if (replacementUnit != null) {
+                replacementUnit.OverrideHealth(health, replacementUnit.MaxHealth);
+            }
+
+            BattleController.Instance?.RemoveUnit(this);
+            Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Overrides runtime health when another unit transforms into this one.
+        /// </summary>
+        /// <param name="currentHealth">Health to inherit.</param>
+        /// <param name="maximumHealth">Maximum health to inherit.</param>
+        public void OverrideHealth(float currentHealth, float maximumHealth) {
+            maxHealth = Mathf.Max(1f, maximumHealth);
+            health = Mathf.Clamp(currentHealth, 1f, maxHealth);
         }
 
         private void LogTargeting(string message) {

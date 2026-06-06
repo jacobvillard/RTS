@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Scripts.GameManagement;
 using _Scripts.UI;
+using _Scripts.Units;
 using UnityEngine;
 
 /// <summary>
@@ -31,6 +32,7 @@ public class GameManager : Singleton<GameManager> {
     [Header("Scene References")]
     [SerializeField] private BoxCollider2D unitPlacementArea;                       // Placement area collider disabled at battle start.
     [SerializeField] private TimeScaleButtonController timeScaleButtonController;   // Time controls synced to state changes.
+    [SerializeField] private OfficerCommandHud officerCommandHud;                   // Officer command HUD shown while an officer is selected.
 
     [Header("Pre-Game Placement")]
     [SerializeField] private List<GameObject> placeableAreas = new();               // Optional fallback areas if the tag lookup is not ready yet.
@@ -57,6 +59,7 @@ public class GameManager : Singleton<GameManager> {
 
     private void Start() {
         SetEndGameUiActive(false);
+        HideCommandUi();
         RefreshPlaceableAreas();
         SetPlaceableAreasActive(IsPreGame());
     }
@@ -121,6 +124,7 @@ public class GameManager : Singleton<GameManager> {
         StopEndGameDelay();
         SetGameState(GameState.PreGame);
         SetEndGameUiActive(false);
+        HideCommandUi();
         RefreshPlaceableAreas();
         SetPlaceableAreasActive(true);
     }
@@ -133,6 +137,53 @@ public class GameManager : Singleton<GameManager> {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
+    }
+
+    #endregion
+    #region Officer Command UI
+
+    /// <summary>
+    /// Shows the officer command UI for the selected officer.
+    /// </summary>
+    /// <param name="officer">Selected officer command controller.</param>
+    public void ShowCommandUi(OfficerCommandController officer) {
+        var hud = GetOfficerCommandHud();
+        if (hud == null) return;
+
+        hud.Show(officer);
+    }
+
+    /// <summary>
+    /// Hides the officer command UI.
+    /// </summary>
+    public void HideCommandUi() {
+        var hud = GetOfficerCommandHud();
+        if (hud == null) return;
+
+        hud.Hide();
+    }
+
+    /// <summary>
+    /// Hides the officer command UI when the supplied officer is the selected officer.
+    /// </summary>
+    /// <param name="officer">Officer being deselected.</param>
+    public void HideCommandUi(OfficerCommandController officer) {
+        var hud = GetOfficerCommandHud();
+        if (hud == null) return;
+
+        hud.HideIfCurrent(officer);
+    }
+
+    /// <summary>
+    /// Resolves the officer command HUD from the scene when it is not assigned.
+    /// </summary>
+    /// <returns>The current officer command HUD, or null.</returns>
+    private OfficerCommandHud GetOfficerCommandHud() {
+        if (officerCommandHud == null) {
+            officerCommandHud = FindObjectOfType<OfficerCommandHud>(true);
+        }
+
+        return officerCommandHud;
     }
 
     #endregion

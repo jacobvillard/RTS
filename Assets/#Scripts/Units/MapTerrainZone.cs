@@ -7,10 +7,18 @@ namespace _Scripts.Units {
     public enum MapTerrainType { Sand, Mud, Forest }
 
     /// <summary>
+    /// Common terrain effect contract for collider and tilemap terrain.
+    /// </summary>
+    public interface IMapTerrainEffect {
+        bool ProvidesForestCover { get; }
+        float MoveSpeedMultiplier { get; }
+    }
+
+    /// <summary>
     /// Applies map terrain effects to units that enter this trigger area.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
-    public class MapTerrainZone : MonoBehaviour {
+    public class MapTerrainZone : MonoBehaviour, IMapTerrainEffect {
 
         #region Variables
 
