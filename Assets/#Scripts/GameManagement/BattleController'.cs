@@ -270,16 +270,16 @@ namespace _Scripts.GameManagement {
             var teamBAlive = _teamAIUnits.Exists(unit => unit != null && unit.IsAlive);
 
             if (!teamAAlive && teamBAlive) {
-                ResolveBattle($"Team B Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
                 winningTeam = "AI";
+                ResolveBattle($"Team B Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
             }
             else if (!teamBAlive && teamAAlive) {
-                ResolveBattle($"Team A Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
                 winningTeam = "Player";
+                ResolveBattle($"Team A Wins! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
             }
             else if (!teamAAlive && !teamBAlive) {
-                ResolveBattle($"Draw or Both Defeated! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
                 winningTeam = "Draw";
+                ResolveBattle($"Draw or Both Defeated! Registered player units: {_teamPlayerUnits.Count}, AI units: {_teamAIUnits.Count}");
             }
         }
 

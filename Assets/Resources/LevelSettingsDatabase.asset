@@ -66,11 +66,11 @@ MonoBehaviour:
     Grenadiers: 0
     Bannermen: 0
   - sceneName: 6
-    levelName: 
+    levelName: Greywall Lane
     startMoney: 800
     cameraOrthographicSize: 6
     officer: 0
-    Scout: 0
+    Scout: 1
     Pikemen: 0
     Skirmishers: 0
     Grenadiers: 0

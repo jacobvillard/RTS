@@ -95,6 +95,7 @@ namespace _Scripts.Units {
         private float _moraleBoostUntil;                           // Time until morale icon should remain active.
         private float _strategicBuffUntil;                          // Time until strategic buff icon should remain active.
         private float _healingUntil;                                // Time until healing icon should remain active.
+        private bool _hasStrategicBuff;                             // True while an owned building explicitly buffs this unit.
         private bool _isFollowingManualMoveCommand;                // True while obeying a player-issued movement command
         private bool _isDragoonDismounted;                         // True after a Dragoon has entered infantry fighting mode.
         private bool _wasInPreGame;                                // True while this unit was last synced during setup
@@ -108,7 +109,7 @@ namespace _Scripts.Units {
 #endif
         public bool IsInForest => _activeForestZones.Count > 0;
         public bool HasMoraleBoost => _moraleBoostUntil > 0f && Time.time <= _moraleBoostUntil;
-        public bool HasStrategicBuff => _strategicBuffUntil > 0f && Time.time <= _strategicBuffUntil;
+        public bool HasStrategicBuff => _hasStrategicBuff;
         public bool IsBeingHealed => _healingUntil > 0f && Time.time <= _healingUntil;
         
         
@@ -1397,10 +1398,12 @@ namespace _Scripts.Units {
         /// </summary>
         /// <param name="moveSpeedMultiplier">Multiplier applied to movement speed.</param>
         /// <param name="attackRateMultiplier">Multiplier applied to attack/reload rate.</param>
-        public void SetStrategicBuffs(float moveSpeedMultiplier, float attackRateMultiplier) {
+        /// <param name="showBuffIcon">Whether a strategic source is actively affecting this unit.</param>
+        public void SetStrategicBuffs(float moveSpeedMultiplier, float attackRateMultiplier, bool showBuffIcon = false) {
             _strategicMoveSpeedMultiplier = Mathf.Max(0.01f, moveSpeedMultiplier);
             _strategicAttackRateMultiplier = Mathf.Max(0.01f, attackRateMultiplier);
-            _strategicBuffUntil = _strategicMoveSpeedMultiplier > 1f || _strategicAttackRateMultiplier > 1f
+            _hasStrategicBuff = showBuffIcon;
+            _strategicBuffUntil = showBuffIcon
                 ? Time.time + 0.8f
                 : 0f;
             UpdateAgentSpeed();

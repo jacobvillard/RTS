@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace _Scripts.Buildings {
     /// <summary>
-    /// Applies team-wide unit buffs while its building is captured.
+    /// Applies strategic unit buffs around a captured building.
     /// </summary>
     [RequireComponent(typeof(CapturableBuilding))]
     public class TeamWideBuildingBuff : MonoBehaviour {
@@ -13,9 +13,10 @@ namespace _Scripts.Buildings {
         #region Variables
 
         [Header("Buffs")]
-        [SerializeField] private float speedMultiplier = 1.03f;     // Team-wide movement multiplier when owned.
-        [SerializeField] private float attackRateMultiplier = 1.03f; // Team-wide attack/reload-rate multiplier when owned.
-        [SerializeField] private float refreshInterval = 0.5f;      // Seconds between global buff refreshes.
+        [SerializeField] private float buffRadius = 12f;            // Friendly units inside this radius receive the captured-building buff.
+        [SerializeField] private float speedMultiplier = 1.03f;     // Movement multiplier applied while inside radius.
+        [SerializeField] private float attackRateMultiplier = 1.03f; // Attack/reload-rate multiplier applied while inside radius.
+        [SerializeField] private float refreshInterval = 0.5f;      // Seconds between buff refreshes.
 
         private static readonly List<TeamWideBuildingBuff> Sources = new(); // Active buff sources in the loaded scene.
         private static float _nextGlobalRefreshTime;                       // Shared next refresh time.
@@ -56,46 +57,64 @@ namespace _Scripts.Buildings {
         private static void ApplyAllBuffs() {
             if (BattleController.Instance == null) return;
 
-            GetTeamMultipliers(Team.Player, out var playerSpeed, out var playerAttackRate);
-            GetTeamMultipliers(Team.AI, out var aiSpeed, out var aiAttackRate);
-
-            ApplyTeamBuff(Team.Player, playerSpeed, playerAttackRate);
-            ApplyTeamBuff(Team.AI, aiSpeed, aiAttackRate);
+            ApplyTeamBuffs(Team.Player);
+            ApplyTeamBuffs(Team.AI);
         }
 
         /// <summary>
-        /// Gets additive multipliers for a team from all owned sources.
+        /// Applies final strategic buffs to every living unit on one team.
         /// </summary>
-        /// <param name="team">Team to aggregate for.</param>
+        /// <param name="team">Team receiving owned building buffs.</param>
+        private static void ApplyTeamBuffs(Team team) {
+            var units = BattleController.Instance.GetFriendlyUnits(team);
+            foreach (var unit in units) {
+                if (unit == null || !unit.IsAlive) continue;
+
+                GetUnitMultipliers(unit, out var speed, out var attackRate, out var hasStrategicBuff);
+                unit.SetStrategicBuffs(speed, attackRate, hasStrategicBuff);
+            }
+        }
+
+        /// <summary>
+        /// Gets additive multipliers for a unit from all nearby owned sources.
+        /// </summary>
+        /// <param name="unit">Unit to calculate buffs for.</param>
         /// <param name="speed">Final speed multiplier.</param>
         /// <param name="attackRate">Final attack-rate multiplier.</param>
-        private static void GetTeamMultipliers(Team team, out float speed, out float attackRate) {
+        /// <param name="hasStrategicBuff">Whether at least one owned building is affecting the unit.</param>
+        private static void GetUnitMultipliers(Unit unit, out float speed, out float attackRate, out bool hasStrategicBuff) {
             speed = 1f;
             attackRate = 1f;
+            hasStrategicBuff = false;
 
             foreach (var source in Sources) {
-                if (source == null || source._building == null) continue;
-                if (!source._building.TryGetOwnerTeam(out var ownerTeam) || ownerTeam != team) continue;
+                if (!source.CanBuffUnit(unit)) continue;
 
+                hasStrategicBuff = true;
                 speed += Mathf.Max(0f, source.speedMultiplier - 1f);
                 attackRate += Mathf.Max(0f, source.attackRateMultiplier - 1f);
             }
         }
 
         /// <summary>
-        /// Applies a final strategic buff to every living friendly unit.
+        /// Checks whether this captured building should buff a unit.
         /// </summary>
-        /// <param name="team">Team receiving the buff.</param>
-        /// <param name="speed">Speed multiplier.</param>
-        /// <param name="attackRate">Attack-rate multiplier.</param>
-        private static void ApplyTeamBuff(Team team, float speed, float attackRate) {
-            var units = BattleController.Instance.GetFriendlyUnits(team);
-            foreach (var unit in units) {
-                if (unit == null || !unit.IsAlive) continue;
+        /// <param name="unit">Potential receiving unit.</param>
+        /// <returns>True when the source is owned by the unit's team and within radius.</returns>
+        private bool CanBuffUnit(Unit unit) {
+            if (unit == null || !unit.IsAlive || _building == null) return false;
+            if (!_building.TryGetOwnerTeam(out var ownerTeam) || ownerTeam != unit.team) return false;
 
-                unit.SetStrategicBuffs(speed, attackRate);
-            }
+            var distanceSqr = ((Vector2)unit.transform.position - (Vector2)transform.position).sqrMagnitude;
+            return distanceSqr <= buffRadius * buffRadius;
         }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected() {
+            Gizmos.color = new Color(1f, 0.92f, 0.1f, 0.3f);
+            Gizmos.DrawWireSphere(transform.position, buffRadius);
+        }
+#endif
 
         #endregion
     }
