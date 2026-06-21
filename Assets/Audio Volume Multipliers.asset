@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 733179bda0a54808b7c3a025b5f926b9, type: 3}
   m_Name: Audio Volume Multipliers
   m_EditorClassIdentifier: 
-  mainVolumeMultiplier: 0.5
-  uiVolumeMultiplier: 0.5
-  sfxVolumeMultiplier: 0.5
-  musicVolumeMultiplier: 0.5
+  mainVolumeMultiplier: 0.28379014
+  uiVolumeMultiplier: 0.5009588
+  sfxVolumeMultiplier: 0.57034135
+  musicVolumeMultiplier: 0.6299287

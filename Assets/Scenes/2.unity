@@ -10562,7 +10562,7 @@ PrefabInstance:
     - target: {fileID: 8030221272103348298, guid: c51471e72b195e94aa911a30a1cece5b, type: 3}
       propertyPath: m_NavMeshData
       value: 
-      objectReference: {fileID: 23800000, guid: eabe2893b0683ff4492b75eaeac1af16, type: 2}
+      objectReference: {fileID: 23800000, guid: 713b5a80bcc17454888e9e843dafd396, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
