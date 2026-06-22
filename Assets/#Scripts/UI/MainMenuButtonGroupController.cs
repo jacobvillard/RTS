@@ -163,11 +163,6 @@ namespace _Scripts.UI {
         private IEnumerator FadeGroupOut() {
             _isFadingOut = true;
 
-            if (disableInteractionDuringFade) {
-                _canvasGroup.interactable = false;
-                _canvasGroup.blocksRaycasts = false;
-            }
-
             if (fadeDelay > 0f) {
                 var delayElapsed = 0f;
                 while (delayElapsed < fadeDelay) {
@@ -187,6 +182,12 @@ namespace _Scripts.UI {
             }
 
             _canvasGroup.alpha = 0f;
+
+            if (disableInteractionDuringFade) {
+                _canvasGroup.interactable = false;
+                _canvasGroup.blocksRaycasts = false;
+            }
+
             _fadeRoutine = null;
         }
 
@@ -233,7 +234,7 @@ namespace _Scripts.UI {
     /// Child button event bridge used by MainMenuButtonGroupController.
     /// </summary>
     [DisallowMultipleComponent]
-    public class MainMenuButtonFadeTrigger : MonoBehaviour, IPointerClickHandler, ISubmitHandler {
+    public class MainMenuButtonFadeTrigger : MonoBehaviour, IPointerDownHandler, ISubmitHandler {
 
         private MainMenuButtonGroupController _controller;
         private Coroutine _fadeRoutine;
@@ -242,27 +243,27 @@ namespace _Scripts.UI {
             _controller = controller;
         }
 
-        public void OnPointerClick(PointerEventData eventData) {
+        public void OnPointerDown(PointerEventData eventData) {
             if (eventData.button != PointerEventData.InputButton.Left) return;
 
-            FadeAfterClickFrame();
+            FadeNow();
         }
 
         public void OnSubmit(BaseEventData eventData) {
-            FadeAfterClickFrame();
+            FadeNow();
         }
 
-        private void FadeAfterClickFrame() {
+        private void FadeNow() {
             if (_fadeRoutine != null) {
                 StopCoroutine(_fadeRoutine);
             }
 
-            _fadeRoutine = StartCoroutine(FadeNextFrame());
+            _fadeRoutine = StartCoroutine(FadeThisFrame());
         }
 
-        private IEnumerator FadeNextFrame() {
-            yield return null;
+        private IEnumerator FadeThisFrame() {
             _controller?.FadeOutButtons();
+            yield return null;
             _fadeRoutine = null;
         }
     }

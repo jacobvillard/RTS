@@ -21,6 +21,16 @@ namespace _Scripts.GameManagement {
             public float uiVolumeMultiplier = 0.5f;
             public float sfxVolumeMultiplier = 0.5f;
             public float musicVolumeMultiplier = 0.5f;
+            public System.Collections.Generic.List<LevelBestTime> levelBestTimes = new();
+        }
+
+        /// <summary>
+        /// Best completion time stored by one-based level number.
+        /// </summary>
+        [Serializable]
+        private class LevelBestTime {
+            public int levelNumber;
+            public float seconds;
         }
 
         #endregion
@@ -73,6 +83,47 @@ namespace _Scripts.GameManagement {
             return Mathf.Max(1, Load(fallbackLevel).highestLevelPlayed);
         }
 
+        /// <summary>
+        /// Gets the saved best time for a one-based level number.
+        /// </summary>
+        public static bool TryGetBestTime(int levelNumber, out float seconds) {
+            var saveData = Load();
+            var safeLevelNumber = Mathf.Max(1, levelNumber);
+            foreach (var bestTime in saveData.levelBestTimes) {
+                if (bestTime == null || bestTime.levelNumber != safeLevelNumber) continue;
+
+                seconds = bestTime.seconds;
+                return seconds > 0f;
+            }
+
+            seconds = 0f;
+            return false;
+        }
+
+        /// <summary>
+        /// Stores a completion time when it beats the previous saved time.
+        /// </summary>
+        public static void SetBestTime(int levelNumber, float seconds) {
+            if (seconds <= 0f) return;
+
+            var saveData = Load();
+            var safeLevelNumber = Mathf.Max(1, levelNumber);
+            foreach (var bestTime in saveData.levelBestTimes) {
+                if (bestTime == null || bestTime.levelNumber != safeLevelNumber) continue;
+                if (bestTime.seconds > 0f && bestTime.seconds <= seconds) return;
+
+                bestTime.seconds = seconds;
+                Save();
+                return;
+            }
+
+            saveData.levelBestTimes.Add(new LevelBestTime {
+                levelNumber = safeLevelNumber,
+                seconds = seconds
+            });
+            Save();
+        }
+
         #endregion
         #region Audio
 
@@ -117,6 +168,7 @@ namespace _Scripts.GameManagement {
             }
 
             _cachedSaveData.highestLevelPlayed = Mathf.Max(1, _cachedSaveData.highestLevelPlayed);
+            _cachedSaveData.levelBestTimes ??= new System.Collections.Generic.List<LevelBestTime>();
             return _cachedSaveData;
         }
 

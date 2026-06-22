@@ -27,15 +27,24 @@ namespace _Scripts.GameManagement {
             [Header("Budget")]
             public int startMoney = 220; // Starting money for unit placement.
 
+            [Header("Preview")]
+            public Sprite previewImage;               // Level select PNG/sprite preview.
+            public string previewImageResourcePath;   // Optional Resources path if the sprite is not assigned directly.
+
             [Header("Camera")]
             public float cameraOrthographicSize = 20f; // Starting orthographic size for the main camera.
+
+            [Header("Medal Times")]
+            public float bronzeTimeSeconds = 600f; // 10 minutes by default.
+            public float silverTimeSeconds = 300f; // 5 minutes by default.
+            public float goldTimeSeconds = 180f;   // Per-level dev time to beat.
 
             [Header("Available Units")] 
             public bool officer;
             public bool Scout;
             public bool Pikemen;
             public bool Skirmishers;
-            public bool Grenadiers;
+            public bool Dragoons;
             public bool Bannermen;
 
 
@@ -57,6 +66,8 @@ namespace _Scripts.GameManagement {
 
         #endregion
         #region Public Methods
+
+        public int LevelCount => levels.Count;
 
         /// <summary>
         /// Loads the project-wide level settings database from Resources.
@@ -99,6 +110,12 @@ namespace _Scripts.GameManagement {
                 startMoney = fallbackStartMoney,
                 cameraOrthographicSize = fallbackCameraOrthographicSize
             };
+        }
+
+        public LevelSettings GetSettingsAt(int index) {
+            if (index < 0 || index >= levels.Count) return null;
+
+            return levels[index];
         }
 
         #endregion

@@ -49,6 +49,12 @@ namespace _Scripts.UI {
         [SerializeField, Min(0f)] private float optionsFadeDelay;
         [SerializeField, Min(0.01f)] private float optionsFadeTime = 0.25f;
 
+        [Header("Level Select Reveal")]
+        [SerializeField] private GameObject levelSelectRoot;
+        [SerializeField] private CanvasGroup levelSelectCanvasGroup;
+        [SerializeField, Min(0f)] private float levelSelectFadeDelay;
+        [SerializeField, Min(0.01f)] private float levelSelectFadeTime = 0.25f;
+
         [Header("Transition")]
         [SerializeField, Min(0f)] private float transitionDelay = 0.12f;
         [SerializeField, Min(0.01f)] private float transitionTime = 0.75f;
@@ -124,7 +130,7 @@ namespace _Scripts.UI {
                 yield break;
             }
 
-            MoveToPose(defaultPosition, defaultRotation, MenuLocation.Play, transitionTimeMultiplier);
+            MoveToPose(defaultPosition, defaultRotation, MenuLocation.Play, transitionTimeMultiplier, false);
             while (_transitionRoutine != null) {
                 yield return null;
             }
@@ -157,36 +163,38 @@ namespace _Scripts.UI {
         private void MoveToTarget(MapTarget target) {
             if (physicalMap == null || target == null) return;
 
-            MoveToPose(target.position, target.rotation, target.location);
+            MoveToPose(target.position, target.rotation, target.location, 1f, true);
         }
 
         private void MoveToPose(Vector3 position, Vector3 rotation, MenuLocation location = MenuLocation.Play) {
-            MoveToPose(position, rotation, location, 1f);
+            MoveToPose(position, rotation, location, 1f, false);
         }
 
         private void MoveToPose(
             Vector3 position,
             Vector3 rotation,
             MenuLocation location,
-            float transitionTimeMultiplier) {
+            float transitionTimeMultiplier,
+            bool revealScreen) {
             if (physicalMap == null) return;
 
             if (_transitionRoutine != null) {
                 StopCoroutine(_transitionRoutine);
             }
 
-            if (location == MenuLocation.Options) {
-                PrepareOptionsFadeIn();
+            if (revealScreen) {
+                PrepareScreenFadeIn(location);
             }
 
-            _transitionRoutine = StartCoroutine(TransitionMap(position, rotation, location, transitionTimeMultiplier));
+            _transitionRoutine = StartCoroutine(TransitionMap(position, rotation, location, transitionTimeMultiplier, revealScreen));
         }
 
         private IEnumerator TransitionMap(
             Vector3 targetPosition,
             Vector3 targetRotation,
             MenuLocation location,
-            float transitionTimeMultiplier) {
+            float transitionTimeMultiplier,
+            bool revealScreen) {
             if (transitionDelay > 0f) {
                 var delayElapsed = 0f;
                 while (delayElapsed < transitionDelay) {
@@ -213,8 +221,8 @@ namespace _Scripts.UI {
             }
 
             SetMapPose(targetPosition, endRotation);
-            if (location == MenuLocation.Options) {
-                yield return FadeOptionsIn();
+            if (revealScreen) {
+                yield return FadeScreenIn(location);
             }
 
             _transitionRoutine = null;
@@ -224,45 +232,60 @@ namespace _Scripts.UI {
             if (optionsCanvasGroup == null && optionsRoot != null) {
                 optionsCanvasGroup = optionsRoot.GetComponent<CanvasGroup>();
             }
+
+            if (levelSelectCanvasGroup == null && levelSelectRoot != null) {
+                levelSelectCanvasGroup = levelSelectRoot.GetComponent<CanvasGroup>();
+            }
         }
 
-        private void PrepareOptionsFadeIn() {
-            if (optionsRoot != null) {
-                optionsRoot.SetActive(true);
+        private void PrepareScreenFadeIn(MenuLocation location) {
+            var screen = GetScreenReveal(location);
+            if (screen.Root != null) {
+                screen.Root.SetActive(true);
             }
 
             ResolveReferences();
+            screen = GetScreenReveal(location);
 
-            if (optionsCanvasGroup == null) return;
+            if (screen.CanvasGroup == null) return;
 
-            optionsCanvasGroup.alpha = 0f;
-            optionsCanvasGroup.interactable = false;
-            optionsCanvasGroup.blocksRaycasts = false;
+            screen.CanvasGroup.alpha = 0f;
+            screen.CanvasGroup.interactable = false;
+            screen.CanvasGroup.blocksRaycasts = false;
         }
 
-        private IEnumerator FadeOptionsIn() {
+        private IEnumerator FadeScreenIn(MenuLocation location) {
             ResolveReferences();
-            if (optionsCanvasGroup == null) yield break;
+            var screen = GetScreenReveal(location);
+            if (screen.CanvasGroup == null) yield break;
 
-            if (optionsFadeDelay > 0f) {
+            if (screen.FadeDelay > 0f) {
                 var delayElapsed = 0f;
-                while (delayElapsed < optionsFadeDelay) {
+                while (delayElapsed < screen.FadeDelay) {
                     delayElapsed += GetDeltaTime();
                     yield return null;
                 }
             }
 
             var elapsed = 0f;
-            while (elapsed < optionsFadeTime) {
+            while (elapsed < screen.FadeTime) {
                 elapsed += GetDeltaTime();
-                var progress = EaseInOut(Mathf.Clamp01(elapsed / optionsFadeTime));
-                optionsCanvasGroup.alpha = Mathf.Lerp(0f, 1f, progress);
+                var progress = EaseInOut(Mathf.Clamp01(elapsed / screen.FadeTime));
+                screen.CanvasGroup.alpha = Mathf.Lerp(0f, 1f, progress);
                 yield return null;
             }
 
-            optionsCanvasGroup.alpha = 1f;
-            optionsCanvasGroup.interactable = true;
-            optionsCanvasGroup.blocksRaycasts = true;
+            screen.CanvasGroup.alpha = 1f;
+            screen.CanvasGroup.interactable = true;
+            screen.CanvasGroup.blocksRaycasts = true;
+        }
+
+        private ScreenReveal GetScreenReveal(MenuLocation location) {
+            return location switch {
+                MenuLocation.Play => new ScreenReveal(levelSelectRoot, levelSelectCanvasGroup, levelSelectFadeDelay, levelSelectFadeTime),
+                MenuLocation.Options => new ScreenReveal(optionsRoot, optionsCanvasGroup, optionsFadeDelay, optionsFadeTime),
+                _ => default
+            };
         }
 
         private void CaptureDefaultPoseIfNeeded() {
@@ -298,6 +321,20 @@ namespace _Scripts.UI {
 
         private static float EaseInOut(float value) {
             return value * value * (3f - 2f * value);
+        }
+
+        private readonly struct ScreenReveal {
+            public readonly GameObject Root;
+            public readonly CanvasGroup CanvasGroup;
+            public readonly float FadeDelay;
+            public readonly float FadeTime;
+
+            public ScreenReveal(GameObject root, CanvasGroup canvasGroup, float fadeDelay, float fadeTime) {
+                Root = root;
+                CanvasGroup = canvasGroup;
+                FadeDelay = fadeDelay;
+                FadeTime = fadeTime;
+            }
         }
 
         #endregion
