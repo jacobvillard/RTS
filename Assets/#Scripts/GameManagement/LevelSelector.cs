@@ -4,6 +4,7 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace _Scripts.GameManagement {
@@ -126,6 +127,13 @@ namespace _Scripts.GameManagement {
         }
 
         /// <summary>
+        /// Loads the currently selected level scene.
+        /// </summary>
+        public void StartGame() {
+            LoadLevel(selectedLevel);
+        }
+
+        /// <summary>
         /// Shows a page by zero-based index.
         /// </summary>
         /// <param name="pageIndex">The page index to display.</param>
@@ -143,12 +151,7 @@ namespace _Scripts.GameManagement {
         /// </summary>
         /// <param name="levelNumber">The numeric level scene name.</param>
         public void LoadLevel(int levelNumber) {
-            if (levelLoader == null) {
-                Debug.LogWarning("Cannot load level because no LevelLoader has been assigned.");
-                return;
-            }
-
-            levelLoader.LoadLevel(levelNumber.ToString());
+            SceneManager.LoadScene(levelNumber.ToString());
         }
 
         /// <summary>

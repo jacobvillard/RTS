@@ -48,6 +48,12 @@ MonoBehaviour:
   infantryUnitCost: 50
   cavalryUnitCost: 100
   musketUnitCost: 60
+  officerUnitCost: 70
+  scoutUnitCost: 35
+  pikemenUnitCost: 90
+  skirmisherUnitCost: 120
+  dragoonUnitCost: 130
+  bannermenUnitCost: 80
   placeableLayer:
     serializedVersion: 2
     m_Bits: 256
@@ -61,13 +67,49 @@ MonoBehaviour:
   infantryUnitCostText: {fileID: 0}
   cavalryUnitCostText: {fileID: 0}
   musketUnitCostText: {fileID: 0}
+  officerUnitCostText: {fileID: 0}
+  scoutUnitCostText: {fileID: 0}
+  pikemenUnitCostText: {fileID: 0}
+  skirmisherUnitCostText: {fileID: 0}
+  dragoonUnitCostText: {fileID: 0}
+  bannermenUnitCostText: {fileID: 0}
   affordableCostColour: {r: 1, g: 1, b: 1, a: 1}
   unaffordableCostColour: {r: 1, g: 0, b: 0, a: 1}
+  disabledIconBackgroundColour: {r: 0.42, g: 0.42, b: 0.42, a: 1}
   infantryUnitButton: {fileID: 0}
   cavalryUnitButton: {fileID: 0}
   musketUnitButton: {fileID: 0}
-  selectedButtonColour: {r: 0.25, g: 0.55, b: 1, a: 1}
-  unselectedButtonColour: {r: 1, g: 1, b: 1, a: 1}
+  officerUnitButton: {fileID: 0}
+  scoutUnitButton: {fileID: 0}
+  pikemenUnitButton: {fileID: 0}
+  skirmisherUnitButton: {fileID: 0}
+  dragoonUnitButton: {fileID: 0}
+  bannermenUnitButton: {fileID: 0}
+  infantryIconBackground: {fileID: 0}
+  cavalryIconBackground: {fileID: 0}
+  musketIconBackground: {fileID: 0}
+  officerIconBackground: {fileID: 0}
+  scoutIconBackground: {fileID: 0}
+  pikemenIconBackground: {fileID: 0}
+  skirmisherIconBackground: {fileID: 0}
+  dragoonIconBackground: {fileID: 0}
+  bannermenIconBackground: {fileID: 0}
+  clearButton: {fileID: 0}
+  clearButtonText: {fileID: 0}
+  clearAllButtonLabel: Clear All
+  clearSelectedButtonLabel: Clear Selected
+  clearAllButtonColour: {r: 1, g: 0, b: 0, a: 1}
+  clearSelectedButtonColour: {r: 1, g: 0.28, b: 0, a: 1}
+  confirmButton: {fileID: 0}
+  confirmButtonText: {fileID: 0}
+  confirmButtonColour: {r: 0.55, g: 0.84, b: 0.23, a: 1}
+  buttonTextHoverScale: 1.08
   infantryUnitPrefab: {fileID: 2453431580732350478, guid: 15f097cb680db8747909c0f929c97be9, type: 3}
   cavalryUnitPrefab: {fileID: 7166203271309519855, guid: 9e5ffe724de2e75498a5b0a16f58f980, type: 3}
   musketUnitPrefab: {fileID: 1562853466630406267, guid: f503b50efec86e44ba0a415bf3310b64, type: 3}
+  officerUnitPrefab: {fileID: 2453431580732350478, guid: 7b983866ae1cd2443aea507cd4eea836, type: 3}
+  scoutUnitPrefab: {fileID: 2453431580732350478, guid: cd04fc7f2e32f644c92ab2aa15026ef5, type: 3}
+  pikemenUnitPrefab: {fileID: 2453431580732350478, guid: 2fce123c1a2aba0429c403c2750daaaa, type: 3}
+  skirmisherUnitPrefab: {fileID: 2453431580732350478, guid: 39cbac6dacc2d544ead7a492dfc124e5, type: 3}
+  dragoonUnitPrefab: {fileID: 2453431580732350478, guid: b960249ec99ed614c9ecc9ada24a9f18, type: 3}
+  bannermenUnitPrefab: {fileID: 2453431580732350478, guid: 544abb4b608264e42b5bc87ff16b5133, type: 3}
