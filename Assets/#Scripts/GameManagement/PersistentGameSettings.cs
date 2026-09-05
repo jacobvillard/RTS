@@ -17,6 +17,7 @@ namespace _Scripts.GameManagement {
         [Serializable]
         private class SaveData {
             public int highestLevelPlayed = 1;
+            public int lastLevelPlayed;
             public float mainVolumeMultiplier = 0.5f;
             public float uiVolumeMultiplier = 0.5f;
             public float sfxVolumeMultiplier = 0.5f;
@@ -44,6 +45,14 @@ namespace _Scripts.GameManagement {
         #region Properties
 
         public static int HighestLevelPlayed => Load().highestLevelPlayed;
+        public static int CurrentLevel {
+            get {
+                if (int.TryParse(SceneManager.GetActiveScene().name, out var activeLevel) && activeLevel > 0)
+                    return activeLevel;
+                var data = Load();
+                return data.lastLevelPlayed > 0 ? data.lastLevelPlayed : data.highestLevelPlayed;
+            }
+        }
         public static float MainVolumeMultiplier => Load().mainVolumeMultiplier;
         public static float UiVolumeMultiplier => Load().uiVolumeMultiplier;
         public static float SfxVolumeMultiplier => Load().sfxVolumeMultiplier;
@@ -53,15 +62,16 @@ namespace _Scripts.GameManagement {
         #region Progress
 
         /// <summary>
-        /// Records a level as played when it is higher than the saved value.
+        /// Remembers the last played level and advances progression when needed.
         /// </summary>
         /// <param name="levelNumber">The numeric level scene played.</param>
         public static void MarkLevelPlayed(int levelNumber) {
             var saveData = Load();
             var safeLevelNumber = Mathf.Max(1, levelNumber);
-            if (safeLevelNumber <= saveData.highestLevelPlayed) return;
+            if (safeLevelNumber == saveData.lastLevelPlayed && safeLevelNumber <= saveData.highestLevelPlayed) return;
 
-            saveData.highestLevelPlayed = safeLevelNumber;
+            saveData.lastLevelPlayed = safeLevelNumber;
+            saveData.highestLevelPlayed = Mathf.Max(saveData.highestLevelPlayed, safeLevelNumber);
             Save();
         }
 

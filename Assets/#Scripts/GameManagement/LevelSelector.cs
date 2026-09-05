@@ -169,7 +169,8 @@ namespace _Scripts.GameManagement {
         /// </summary>
         public void RefreshFromSave() {
             RefreshLastUnlockedLevel();
-            SetPage(GetPageIndexForLevel(lastUnlockedLevel));
+            SelectLevel(PersistentGameSettings.CurrentLevel);
+            SetPage(GetPageIndexForLevel(selectedLevel));
         }
 
         #endregion

@@ -33,7 +33,7 @@ MonoBehaviour:
   - sceneName: 2
     levelName: 'Broken Line '
     startMoney: 350
-    previewImage: {fileID: 0}
+    previewImage: {fileID: 21300000, guid: bdf89af327d095e42a8a8b35f98f89c7, type: 3}
     previewImageResourcePath: 
     cameraOrthographicSize: 6
     bronzeTimeSeconds: 600
@@ -48,7 +48,7 @@ MonoBehaviour:
   - sceneName: 3
     levelName: 'Saint Clara Field '
     startMoney: 250
-    previewImage: {fileID: 0}
+    previewImage: {fileID: 21300000, guid: 3d45e3ad14a3f004985b2203276190bf, type: 3}
     previewImageResourcePath: 
     cameraOrthographicSize: 6
     bronzeTimeSeconds: 600
@@ -63,7 +63,7 @@ MonoBehaviour:
   - sceneName: 4
     levelName: Miller's Farm
     startMoney: 500
-    previewImage: {fileID: 0}
+    previewImage: {fileID: 21300000, guid: 0a18abb53e256454e8fd75780086790c, type: 3}
     previewImageResourcePath: 
     cameraOrthographicSize: 6
     bronzeTimeSeconds: 600
@@ -78,7 +78,7 @@ MonoBehaviour:
   - sceneName: 5
     levelName: Foxwood Gate
     startMoney: 500
-    previewImage: {fileID: 0}
+    previewImage: {fileID: 21300000, guid: d32da6dfc931f37408d5f53d8a262d28, type: 3}
     previewImageResourcePath: 
     cameraOrthographicSize: 6
     bronzeTimeSeconds: 600
@@ -93,7 +93,7 @@ MonoBehaviour:
   - sceneName: 6
     levelName: Greywall Lane
     startMoney: 800
-    previewImage: {fileID: 0}
+    previewImage: {fileID: 21300000, guid: 6ebe417c7f8999a44b41d5b9f7b66cd2, type: 3}
     previewImageResourcePath: 
     cameraOrthographicSize: 6
     bronzeTimeSeconds: 600

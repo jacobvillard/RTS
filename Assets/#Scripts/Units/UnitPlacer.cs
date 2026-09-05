@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using _Scripts.GameManagement;
 using _Scripts.UI;
@@ -6,6 +7,7 @@ using _Scripts.Units;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 /// <summary>
@@ -116,7 +118,8 @@ public class UnitPlacer : Singleton<UnitPlacer> {
     private Vector2 _pointerStartScreenPosition; // Pointer position when the current tap began.
     private bool _isPointerPressActive;         // True while waiting to decide if a press is a tap or drag.
     private SelectedUnitType _selectedUnitType = SelectedUnitType.None; // Unit selected for placement.
-    private readonly HashSet<Button> _runtimeBoundButtons = new(); // Buttons bound by this script at runtime.
+    private readonly Dictionary<Button, UnityAction> _runtimeBoundButtons = new();
+    private Coroutine _shopLayoutRefresh;
     private readonly HashSet<Button> _hoverStyledButtons = new(); // Buttons with runtime hover text scaling.
     private readonly Dictionary<Transform, Vector3> _buttonTextBaseScales = new(); // Original button label scales.
     private readonly Dictionary<Image, Color> _iconBackgroundBaseColours = new(); // Original icon background colours.
@@ -261,6 +264,9 @@ public class UnitPlacer : Singleton<UnitPlacer> {
         skirmisherIconBackground = null;
         dragoonIconBackground = null;
         bannermenIconBackground = null;
+        foreach (var binding in _runtimeBoundButtons) {
+            if (binding.Key != null) binding.Key.onClick.RemoveListener(binding.Value);
+        }
         _runtimeBoundButtons.Clear();
         _iconBackgroundBaseColours.Clear();
         placedUnits.Clear();
@@ -291,6 +297,8 @@ public class UnitPlacer : Singleton<UnitPlacer> {
         BindHoverStyles();
         ApplyLevelUnitAvailability();
         NormalizeShopRowLayout();
+        if (_shopLayoutRefresh != null) StopCoroutine(_shopLayoutRefresh);
+        if (isActiveAndEnabled) _shopLayoutRefresh = StartCoroutine(RefreshShopAfterStartup());
         UpdateClearButtonState(true);
         UpdateConfirmButtonVisuals();
 
@@ -416,7 +424,7 @@ public class UnitPlacer : Singleton<UnitPlacer> {
     }
 
     /// <summary>
-    /// Adds runtime click handlers for shop buttons that do not already have Inspector handlers.
+    /// Binds each shop row to its unit type on the current manager.
     /// </summary>
     private void BindUnitButtons() {
         BindUnitButton(infantryUnitButton, "Infantry");
@@ -439,16 +447,40 @@ public class UnitPlacer : Singleton<UnitPlacer> {
     }
 
     /// <summary>
-    /// Adds a button listener when the scene has not already wired one in the Inspector.
+    /// Replaces old selection callbacks while preserving unrelated Inspector actions.
     /// </summary>
     /// <param name="button">The button to bind.</param>
     /// <param name="unitType">The unit selection id.</param>
     private void BindUnitButton(Button button, string unitType) {
-        if (button == null || _runtimeBoundButtons.Contains(button)) return;
-        if (button.onClick.GetPersistentEventCount() > 0) return;
+        if (button == null || _runtimeBoundButtons.ContainsKey(button)) return;
+        // Scene overrides may retain an old manager or unit argument. Keep unrelated actions.
+        for (var i = 0; i < button.onClick.GetPersistentEventCount(); i++) {
+            if (button.onClick.GetPersistentMethodName(i) == nameof(SetSelectedUnitType))
+                button.onClick.SetPersistentListenerState(i, UnityEventCallState.Off);
+        }
+        UnityAction action = () => SetSelectedUnitType(unitType);
+        button.onClick.AddListener(action);
+        _runtimeBoundButtons.Add(button, action);
 
-        button.onClick.AddListener(() => SetSelectedUnitType(unitType));
-        _runtimeBoundButtons.Add(button);
+        // Decorative child graphics must not extend another row's click target.
+        var rowGraphic = button.GetComponent<Graphic>();
+        foreach (var graphic in button.GetComponentsInChildren<Graphic>(true)) {
+            if (graphic.GetComponentInParent<Button>() == button)
+                graphic.raycastTarget = graphic == rowGraphic;
+        }
+    }
+
+    private IEnumerator RefreshShopAfterStartup() {
+        // sceneLoaded runs before Start: CanvasScaler and ScrollRect settle later.
+        yield return null;
+        NormalizeShopRowLayout();
+        var content = GetShopContent(GetOrderedShopRows());
+        if (content != null) {
+            foreach (var graphic in content.GetComponentsInChildren<Graphic>(true))
+                graphic.SetAllDirty();
+            Canvas.ForceUpdateCanvases();
+        }
+        _shopLayoutRefresh = null;
     }
 
     /// <summary>
