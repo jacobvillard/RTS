@@ -28,6 +28,7 @@ namespace _Scripts.Units {
         }
 
         private void Update() {
+            if (GameManager.Instance != null && GameManager.Instance.IsPreGame()) return;
             if (Time.time < _nextCommandTime) return;
 
             _nextCommandTime = Time.time + commandInterval;

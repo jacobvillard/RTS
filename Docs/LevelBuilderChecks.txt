@@ -1,0 +1,2 @@
+PASS: 34 editor checks. Enemy prefab roles/teams/components, dragoon dismount, bridge exceptions, negative cells, idempotent overlays, water/solid behaviour, Undo, formation centre and building footprint.
+Gameplay AI and navigation paths require user playtesting.
